@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { search, mapPin } from "lucide-react";
+import { Search, MapPin } from "lucide-react";
 import TherapistCard from "./TherapistCard";
 
 // Mock therapist data (would be fetched from a backend in a real implementation)
@@ -95,7 +95,7 @@ const TheraConnect = () => {
               <label className="text-sm font-medium">Your Location</label>
               <div className="flex gap-2">
                 <div className="relative flex-grow">
-                  <mapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   <Input
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
@@ -109,7 +109,7 @@ const TheraConnect = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Search Specialties</label>
               <div className="relative">
-                <search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

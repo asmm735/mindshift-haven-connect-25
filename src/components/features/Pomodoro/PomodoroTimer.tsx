@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { play, pause, timer } from "lucide-react";
+import { Play, Pause, Timer } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -128,7 +128,7 @@ const PomodoroTimer = () => {
     <Card className="mindshift-card max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl text-mindshift-raspberry flex items-center gap-2">
-          <timer className="h-6 w-6" />
+          <Timer className="h-6 w-6" />
           Pomodoro Timer
         </CardTitle>
         <CardDescription>
@@ -213,7 +213,7 @@ const PomodoroTimer = () => {
                   onClick={handleStartPause}
                   className="mindshift-button px-6 py-2 rounded-full"
                 >
-                  {isRunning ? <pause className="mr-2 h-4 w-4" /> : <play className="mr-2 h-4 w-4" />}
+                  {isRunning ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
                   {isRunning ? "Pause" : "Start"}
                 </Button>
                 

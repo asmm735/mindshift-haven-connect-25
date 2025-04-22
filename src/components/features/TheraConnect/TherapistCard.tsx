@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { mapPin, phone } from "lucide-react";
+import { MapPin, Phone } from "lucide-react";
 
 interface Therapist {
   id: number;
@@ -68,12 +68,12 @@ const TherapistCard = ({ therapist }: TherapistCardProps) => {
             </div>
             
             <div className="flex items-center text-gray-600 mb-2">
-              <mapPin className="h-4 w-4 mr-2" />
+              <MapPin className="h-4 w-4 mr-2" />
               <span className="text-sm">{therapist.address}</span>
             </div>
             
             <div className="flex items-center text-gray-600 mb-4">
-              <phone className="h-4 w-4 mr-2" />
+              <Phone className="h-4 w-4 mr-2" />
               <span className="text-sm">{therapist.phone}</span>
             </div>
             
