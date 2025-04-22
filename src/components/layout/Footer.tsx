@@ -1,5 +1,5 @@
-
 import { Link } from "react-router-dom";
+import Logo from "@/components/common/Logo";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -9,10 +9,7 @@ const Footer = () => {
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <Link to="/" className="flex items-center gap-2 text-mindshift-raspberry font-serif font-bold text-xl mb-4">
-              <div className="h-6 w-6 rounded-full mindshift-gradient flex items-center justify-center text-white font-bold text-xs">M</div>
-              <span>MindShift</span>
-            </Link>
+            <Logo size="md" className="mb-4" />
             <p className="text-gray-600 text-sm">
               Helping you find your mental clarity and strength through technology and connection.
             </p>
