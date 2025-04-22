@@ -1,8 +1,11 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn, UserPlus } from "lucide-react";
 import Logo from "@/components/common/Logo";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const navigationItems = [
   { name: "Home", path: "/" },
@@ -15,6 +18,12 @@ const navigationItems = [
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
@@ -37,6 +46,28 @@ const Navbar = () => {
             </Link>
           ))}
         </nav>
+
+        {/* Auth Buttons */}
+        <div className="hidden md:flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => navigate('/login')}
+          >
+            <LogIn className="h-4 w-4" />
+            Login
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => navigate('/signup')}
+          >
+            <UserPlus className="h-4 w-4" />
+            Sign up
+          </Button>
+        </div>
 
         {/* Mobile Menu Button */}
         <Button
@@ -67,6 +98,31 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            {/* Mobile Auth Buttons */}
+            <div className="flex flex-col gap-2 pt-4">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 w-full justify-center"
+                onClick={() => {
+                  navigate('/login');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <LogIn className="h-4 w-4" />
+                Login
+              </Button>
+              <Button
+                variant="default"
+                className="flex items-center gap-2 w-full justify-center"
+                onClick={() => {
+                  navigate('/signup');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <UserPlus className="h-4 w-4" />
+                Sign up
+              </Button>
+            </div>
           </div>
         </nav>
       )}

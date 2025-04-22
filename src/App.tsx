@@ -1,8 +1,10 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import RequireAuth from "./components/auth/RequireAuth";
 
 // Pages
 import Index from "./pages/Index";
@@ -24,8 +26,16 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/mood-tracker" element={<MoodTracker />} />
-          <Route path="/ai-chat" element={<AIChat />} />
+          <Route path="/mood-tracker" element={
+            <RequireAuth>
+              <MoodTracker />
+            </RequireAuth>
+          } />
+          <Route path="/ai-chat" element={
+            <RequireAuth>
+              <AIChat />
+            </RequireAuth>
+          } />
           <Route path="/pomodoro" element={<Pomodoro />} />
           <Route path="/therapists" element={<TheraConnect />} />
           <Route path="/login" element={<Login />} />
