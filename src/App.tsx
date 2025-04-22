@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,8 @@ import AIChat from "./pages/AIChat";
 import Pomodoro from "./pages/Pomodoro";
 import TheraConnect from "./pages/TheraConnect";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,8 @@ const App = () => (
           <Route path="/ai-chat" element={<AIChat />} />
           <Route path="/pomodoro" element={<Pomodoro />} />
           <Route path="/therapists" element={<TheraConnect />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
