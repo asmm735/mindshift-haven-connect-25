@@ -109,8 +109,7 @@ const TheraConnectMap = ({ therapists }: MapProps) => {
       markersRef.current.forEach(marker => {
         if (marker) {
           // Remove event listeners and then remove from map
-          if (window.google && window.google.maps) {
-            // Access event through window.google.maps instead of google.maps directly
+          if (window.google?.maps) {
             window.google.maps.event.clearInstanceListeners(marker);
           }
           marker.setMap(null);
@@ -177,7 +176,7 @@ const TheraConnectMap = ({ therapists }: MapProps) => {
             animation: window.google.maps.Animation.DROP
           });
           
-          // Add click listener to show info window
+          // Add click listener to show info window using the event namespace
           window.google.maps.event.addListener(marker, 'click', () => {
             const verifiedBadge = therapist.verified ? 
               `<span class="px-1 py-0.5 bg-green-100 text-green-800 text-xs rounded">✓ Verified</span>` : '';

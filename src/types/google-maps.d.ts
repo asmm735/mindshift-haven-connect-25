@@ -42,6 +42,15 @@ declare namespace google {
       union(other: LatLngBounds): LatLngBounds;
     }
 
+    namespace event {
+      function addListener(instance: object, eventName: string, handler: Function): MapsEventListener;
+      function addDomListener(instance: Element, eventName: string, handler: Function, capture?: boolean): MapsEventListener;
+      function clearInstanceListeners(instance: object): void;
+      function clearListeners(instance: object, eventName: string): void;
+      function removeListener(listener: MapsEventListener): void;
+      function trigger(instance: any, eventName: string, ...args: any[]): void;
+    }
+
     interface MapsEventListener {
       remove(): void;
     }
