@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,19 +30,19 @@ const defaultSettings: TimerSettings = {
   longBreak: 15,
 };
 
-// Updated sound options with distinct, descriptive real audio URLs
+// Corrected sound options with working URLs for better accessibility
 const soundOptions: SoundOption[] = [
-  { id: "rain", name: "Rain", src: "https://cdn.pixabay.com/audio/2023/03/27/audio_129bfa4563.mp3" }, // Rain
-  { id: "forest", name: "Forest", src: "https://cdn.pixabay.com/audio/2022/02/23/audio_105b3e7a8b.mp3" }, // Forest
-  { id: "ocean", name: "Ocean Waves", src: "https://cdn.pixabay.com/audio/2022/07/26/audio_124bffdf61.mp3" }, // Ocean
-  { id: "bonfire", name: "Bonfire", src: "https://cdn.pixabay.com/audio/2022/02/23/audio_105b8369d8.mp3" }, // Bonfire/Fire
-  { id: "gamma", name: "Gamma Waves", src: "https://cdn.pixabay.com/audio/2022/02/23/audio_105b51690d.mp3" }, // Gamma Waves
-  { id: "alpha", name: "Alpha Waves", src: "https://cdn.pixabay.com/audio/2022/03/15/audio_115b4a5e6d.mp3" }, // Alpha Waves
-  { id: "beta", name: "Beta Waves", src: "https://cdn.pixabay.com/audio/2022/03/15/audio_115b4d94ff.mp3" }, // Beta Waves
+  { id: "rain", name: "Rain", src: "https://soundbible.com/mp3/rain_thunder-Mike_Koenig-694151151.mp3" }, 
+  { id: "forest", name: "Forest", src: "https://soundbible.com/mp3/forest-fire-daniel_simon.mp3" }, 
+  { id: "ocean", name: "Ocean Waves", src: "https://soundbible.com/mp3/Ocean_Waves-Mike_Koenig-980635285.mp3" }, 
+  { id: "bonfire", name: "Bonfire", src: "https://soundbible.com/mp3/Fire_Crackling-Mike_Koenig-1921202700.mp3" }, 
+  { id: "gamma", name: "Gamma Waves", src: "https://soundbible.com/mp3/meadow-ambience-daniel_simon.mp3" }, 
+  { id: "alpha", name: "Alpha Waves", src: "https://soundbible.com/mp3/bubbling-daniel_simon.mp3" }, 
+  { id: "beta", name: "Beta Waves", src: "https://soundbible.com/mp3/crossing_link-daniel_simon.mp3" }, 
 ];
 
-// Create notification sound URL
-const notificationSoundUrl = "https://assets.mixkit.co/active_storage/sfx/254/254-preview.mp3";
+// Create notification sound URL with reliable source
+const notificationSoundUrl = "https://soundbible.com/mp3/Electronic_Chime-KevanGC-495939803.mp3";
 
 const PomodoroTimer = () => {
   const [settings, setSettings] = useState<TimerSettings>(defaultSettings);
@@ -57,18 +58,21 @@ const PomodoroTimer = () => {
   const notificationRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
-  // Initialize audio elements
+  // Initialize audio elements with preloading
   useEffect(() => {
     if (typeof Audio !== 'undefined') {
-      audioRef.current = new Audio(selectedSound.src);
+      // Create and configure audio elements
+      audioRef.current = new Audio();
+      audioRef.current.src = selectedSound.src;
       audioRef.current.loop = true;
-      // Set high default volume
       audioRef.current.volume = volume / 100;
-      notificationRef.current = new Audio(notificationSoundUrl);
+      audioRef.current.preload = "auto"; // Ensure preloading
+
+      notificationRef.current = new Audio();
+      notificationRef.current.src = notificationSoundUrl;
       notificationRef.current.volume = 0.7;
-      // Preload audio files
-      audioRef.current.load();
-      notificationRef.current.load();
+      notificationRef.current.preload = "auto"; // Ensure preloading
+
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
@@ -97,19 +101,17 @@ const PomodoroTimer = () => {
       audioRef.current.pause();
       audioRef.current.src = selectedSound.src;
       audioRef.current.loop = true;
-      // Always set volume according to slider/high default
       audioRef.current.volume = volume / 100;
-      audioRef.current.load();
+      
       if (soundEnabled && isRunning) {
-        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+        playAudio(audioRef.current);
       }
     }
-  }, [selectedSound, volume]); // add volume as dependency
+  }, [selectedSound]);
 
   // Handle volume change
   useEffect(() => {
     if (audioRef.current) {
-      // Bump to max if user ever sets it above
       audioRef.current.volume = volume / 100;
     }
   }, [volume]);
@@ -118,7 +120,7 @@ const PomodoroTimer = () => {
   useEffect(() => {
     if (audioRef.current) {
       if (soundEnabled && isRunning) {
-        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+        playAudio(audioRef.current);
       } else {
         audioRef.current.pause();
       }
@@ -141,7 +143,7 @@ const PomodoroTimer = () => {
 
       // Start sound if enabled
       if (soundEnabled && audioRef.current) {
-        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+        playAudio(audioRef.current);
       }
     } else {
       if (timerRef.current) {
@@ -163,12 +165,39 @@ const PomodoroTimer = () => {
     };
   }, [isRunning]);
 
+  // Helper function to play audio with error handling
+  const playAudio = (audio: HTMLAudioElement) => {
+    // Reset audio to beginning before playing
+    audio.currentTime = 0;
+    
+    const playPromise = audio.play();
+    
+    // Handle play() promise to catch any errors
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          // Audio playback started successfully
+        })
+        .catch(error => {
+          console.error("Audio playback error:", error);
+          // Try to recover by recreating the audio element
+          if (audio === audioRef.current && audioRef.current) {
+            const newAudio = new Audio(selectedSound.src);
+            newAudio.loop = true;
+            newAudio.volume = volume / 100;
+            audioRef.current = newAudio;
+            newAudio.play().catch(e => console.error("Recovery playback failed:", e));
+          }
+        });
+    }
+  };
+
   const handleTimerComplete = () => {
     setIsRunning(false);
     
     // Play notification sound
     if (notificationRef.current) {
-      notificationRef.current.play().catch(e => console.log("Notification audio play failed:", e));
+      playAudio(notificationRef.current);
     }
     
     if (currentMode === "focus") {
@@ -232,6 +261,38 @@ const PomodoroTimer = () => {
     }
   };
 
+  // Function to switch timer modes directly
+  const switchTimerMode = (mode: TimerMode) => {
+    setCurrentMode(mode);
+    setTimeRemaining(settings[mode] * 60);
+    setIsRunning(false);
+    
+    // Stop any running intervals
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  // Helper function to preview audio
+  const previewAudio = (sound: SoundOption) => {
+    // Create a temporary audio element for preview
+    const previewAudio = new Audio(sound.src);
+    previewAudio.volume = volume / 100;
+    
+    const playPromise = previewAudio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.error("Audio preview failed:", e));
+      
+      // Play for 3 seconds then pause
+      setTimeout(() => {
+        previewAudio.pause();
+        previewAudio.remove(); // Clean up
+      }, 3000);
+    }
+  };
+
   return (
     <Card className="mindshift-card max-w-md mx-auto">
       <CardHeader>
@@ -257,21 +318,21 @@ const PomodoroTimer = () => {
               <TabsList className="grid grid-cols-3">
                 <TabsTrigger 
                   value="focus" 
-                  onClick={() => setCurrentMode("focus")}
+                  onClick={() => switchTimerMode("focus")}
                   className={currentMode === "focus" ? "bg-mindshift-raspberry text-white" : ""}
                 >
                   Focus
                 </TabsTrigger>
                 <TabsTrigger 
                   value="shortBreak" 
-                  onClick={() => setCurrentMode("shortBreak")}
+                  onClick={() => switchTimerMode("shortBreak")}
                   className={currentMode === "shortBreak" ? "bg-mindshift-lavender text-white" : ""}
                 >
                   Short Break
                 </TabsTrigger>
                 <TabsTrigger 
                   value="longBreak" 
-                  onClick={() => setCurrentMode("longBreak")}
+                  onClick={() => switchTimerMode("longBreak")}
                   className={currentMode === "longBreak" ? "bg-mindshift-dark text-white" : ""}
                 >
                   Long Break
@@ -401,12 +462,9 @@ const PomodoroTimer = () => {
                           variant="ghost" 
                           size="sm" 
                           className="h-8 w-8 p-0"
-                          onClick={() => {
-                            // Preview sound
-                            const audio = new Audio(sound.src);
-                            audio.volume = volume / 100;
-                            audio.play().catch(e => console.log("Audio preview failed:", e));
-                            setTimeout(() => audio.pause(), 3000); // Play for 3 seconds
+                          onClick={(e) => {
+                            e.preventDefault(); // Prevent changing selection
+                            previewAudio(sound);
                           }}
                         >
                           <Play className="h-4 w-4" />
@@ -491,7 +549,7 @@ const PomodoroTimer = () => {
                   size="sm"
                   onClick={() => {
                     if (notificationRef.current) {
-                      notificationRef.current.play().catch(e => console.log("Test notification failed:", e));
+                      playAudio(notificationRef.current);
                     }
                   }}
                   className="w-full"

@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
+// Predefined therapeutic responses for the AI chat
 const aiResponses = [
   "I hear you're going through a difficult time. How long have you been feeling this way?",
   "That sounds really challenging. Would it help to explore what might be triggering these feelings?",
@@ -20,6 +22,21 @@ const aiResponses = [
   "Many people experience similar feelings. Would it be helpful to discuss some strategies that others have found useful?",
   "It's important to acknowledge these emotions. How have you been coping so far?",
   "Thank you for trusting me with this. Would you like to explore some resources that might help with what you're experiencing?"
+];
+
+// Enhanced therapeutic responses for specific emotions
+const anxietyResponses = [
+  "I notice some anxiety in what you're sharing. Would a grounding exercise help right now?",
+  "Anxiety can be really challenging to navigate. What helps you feel more centered when you experience these feelings?",
+  "When anxiety builds up, our breathing often becomes shallow. Would you like to try a breathing exercise to help regulate your nervous system?",
+  "Sometimes naming what we're afraid of can help reduce anxiety. Is there a specific concern at the heart of these feelings?"
+];
+
+const depressionResponses = [
+  "It sounds like things have been really heavy lately. Have you been able to be gentle with yourself during this difficult time?",
+  "Depression can make even small tasks feel overwhelming. What's one tiny step that might feel manageable today?",
+  "When we're feeling down, our thoughts often become more negative. Have you noticed any patterns in your thinking lately?",
+  "It takes courage to talk about these feelings. Have you considered speaking with a mental health professional about what you're experiencing?"
 ];
 
 const breathingExercises = [
@@ -145,30 +162,68 @@ const AIChat = () => {
     }
   };
 
-  const detectAnxietyOrDepression = (text: string): boolean => {
-    const keywords = [
-      'anxious', 'anxiety', 'worried', 'stress', 'stressed',
-      'depressed', 'depression', 'sad', 'hopeless', 'overwhelmed',
-      'exhausted', 'tired', 'can\'t sleep', 'insomnia', 'panic',
-      'no energy', 'no motivation', 'worthless', 'suicidal', 
-      'kill myself', 'end my life', 'don\'t want to live'
-    ];
+  const detectAnxietyOrDepression = (text: string): string | null => {
+    const anxietyKeywords = ['anxious', 'anxiety', 'worried', 'stress', 'stressed',
+      'panic', 'fear', 'scared', 'nervous', 'tense', 'overthinking'];
+      
+    const depressionKeywords = ['depressed', 'depression', 'sad', 'hopeless', 'overwhelmed',
+      'exhausted', 'tired', 'can\'t sleep', 'insomnia', 'no energy', 'no motivation', 
+      'worthless', 'suicidal', 'kill myself', 'end my life', 'don\'t want to live'];
     
-    return keywords.some(keyword => 
-      text.toLowerCase().includes(keyword.toLowerCase())
-    );
+    const textLower = text.toLowerCase();
+    
+    if (anxietyKeywords.some(keyword => textLower.includes(keyword))) {
+      return "anxiety";
+    }
+    
+    if (depressionKeywords.some(keyword => textLower.includes(keyword))) {
+      return "depression";
+    }
+    
+    return null;
   };
 
-  const getEmpathicResponse = (): string => {
-    const empathicResponses = [
-      "It sounds like things have been difficult lately. Would you like to try a breathing exercise that might help?",
-      "I'm hearing that you're going through some challenging emotions. Would talking to a professional help?",
-      "That sounds really tough. Many people find breathing exercises helpful in moments like these. Would you like to try one?",
-      "I'm sorry you're experiencing this. Would you like to explore some coping strategies together?",
-      "It takes courage to share these feelings. Would a brief breathing exercise help right now?"
-    ];
+  const getTherapeuticResponse = (userInput: string): string => {
+    const condition = detectAnxietyOrDepression(userInput);
     
-    return empathicResponses[Math.floor(Math.random() * empathicResponses.length)];
+    if (condition === "anxiety") {
+      return anxietyResponses[Math.floor(Math.random() * anxietyResponses.length)];
+    }
+    
+    if (condition === "depression") {
+      return depressionResponses[Math.floor(Math.random() * depressionResponses.length)];
+    }
+    
+    // Check if user mentioned breathing or exercises
+    if (userInput.toLowerCase().includes("breath") || 
+        userInput.toLowerCase().includes("exercise") || 
+        userInput.toLowerCase().includes("calm") ||
+        userInput.toLowerCase().includes("relax")) {
+      return "Would you like to try one of our breathing exercises? They can be really helpful for finding calm in difficult moments.";
+    }
+    
+    // Default responses for general conversation
+    return aiResponses[Math.floor(Math.random() * aiResponses.length)];
+  };
+
+  const simulateTyping = (response: string, callback: (text: string) => void) => {
+    let i = 0;
+    const typingSpeed = 25; // milliseconds per character
+    const responseLength = response.length;
+    
+    const typingInterval = setInterval(() => {
+      i++;
+      if (i > responseLength) {
+        clearInterval(typingInterval);
+        callback(response);
+      }
+    }, typingSpeed);
+    
+    // Safety timeout to ensure response always completes (3-10 seconds based on length)
+    setTimeout(() => {
+      clearInterval(typingInterval);
+      callback(response);
+    }, Math.min(10000, Math.max(3000, responseLength * typingSpeed * 1.5)));
   };
 
   const handleSendMessage = async () => {
@@ -186,56 +241,27 @@ const AIChat = () => {
     setInput("");
     setIsTyping(true);
 
-    // Therapist prompt context for improved empathy
-    const SYSTEM_PROMPT =
-      "You are a compassionate, insightful online therapist chatbot. Each response should be empathic, supportive, and guide the user gently to reflect or try grounding exercises, but do not give direct clinical advice. If the user asks about breathing or calming exercises, suggest a simple, slow-paced technique, and always encourage them at the end.";
-
-    const apiKey = "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";
-    let aiResponse = "";
-
-    try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...messages.map(m => ({
-              role: m.type === "user" ? "user" : "assistant",
-              content: m.text
-            })),
-            { role: "user", content: input.trim() }
-          ],
-          temperature: 0.7,
-          max_tokens: 120
-        })
+    // Generate a therapeutic response
+    const aiResponse = getTherapeuticResponse(userMessage.text);
+    
+    // Add a small delay and typing simulation for realism
+    setTimeout(() => {
+      simulateTyping(aiResponse, (finalResponse) => {
+        const aiMessage: Message = {
+          id: messages.length + 2,
+          type: "ai",
+          text: finalResponse,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, aiMessage]);
+        saveMessage(aiMessage);
+        setIsTyping(false);
       });
-      const data = await res.json();
-      aiResponse =
-        data?.choices?.[0]?.message?.content?.trim() ||
-        "Sorry, I'm unable to respond right now.";
-    } catch (e) {
-      aiResponse =
-        "Sorry, I couldn't connect to the AI service. Please try again later.";
-    }
-
-    const aiMessage: Message = {
-      id: messages.length + 2,
-      type: "ai",
-      text: aiResponse,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, aiMessage]);
-    saveMessage(aiMessage);
-    setIsTyping(false);
+    }, 1000);
   };
 
-  // Breathing: Make pace slower (more relaxing per user request)
+  // Breathing: Slower pace as requested
   const startBreathingExercise = (exerciseIndex: number) => {
     if (isBreathing) return;
 
