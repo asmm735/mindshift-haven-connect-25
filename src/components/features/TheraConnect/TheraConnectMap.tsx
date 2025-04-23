@@ -144,16 +144,26 @@ const TheraConnectMap = ({ therapists }: MapProps) => {
     
     // Adjust map bounds if we have markers
     if (markersRef.current.length > 0 && mapInstance.current) {
-      const bounds = new window.google.maps.LatLngBounds();
-      markersRef.current.forEach(marker => {
-        bounds.extend(marker.getPosition()!);
-      });
-      mapInstance.current.fitBounds(bounds);
-      
-      // Don't zoom in too far
-      const zoom = mapInstance.current.getZoom();
-      if (zoom && zoom > 15) {
-        mapInstance.current.setZoom(15);
+      try {
+        const bounds = new window.google.maps.LatLngBounds();
+        markersRef.current.forEach(marker => {
+          const position = marker.getPosition();
+          if (position) {
+            bounds.extend(position);
+          }
+        });
+        
+        if (!bounds.isEmpty()) {
+          mapInstance.current.fitBounds(bounds);
+          
+          // Don't zoom in too far
+          const zoom = mapInstance.current.getZoom();
+          if (zoom && zoom > 15) {
+            mapInstance.current.setZoom(15);
+          }
+        }
+      } catch (error) {
+        console.error("Error setting map bounds:", error);
       }
     }
   };

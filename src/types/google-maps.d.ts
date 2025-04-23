@@ -8,12 +8,15 @@ declare namespace google {
       setOptions(options: MapOptions): void;
       getCenter(): LatLng;
       getBounds(): LatLngBounds;
+      getZoom(): number;
+      fitBounds(bounds: LatLngBounds, padding?: number | Padding): void;
     }
 
     class Marker {
       constructor(opts?: MarkerOptions);
       setMap(map: Map | null): void;
       setPosition(latLng: LatLng | LatLngLiteral): void;
+      getPosition(): LatLng;
       setTitle(title: string): void;
       addListener(event: string, handler: Function): MapsEventListener;
     }
@@ -23,6 +26,20 @@ declare namespace google {
       setContent(content: string | Node): void;
       open(map: Map, anchor?: Marker): void;
       close(): void;
+    }
+
+    class LatLngBounds {
+      constructor(sw?: LatLng | LatLngLiteral, ne?: LatLng | LatLngLiteral);
+      contains(latLng: LatLng | LatLngLiteral): boolean;
+      extend(latLng: LatLng | LatLngLiteral): LatLngBounds;
+      getCenter(): LatLng;
+      getNorthEast(): LatLng;
+      getSouthWest(): LatLng;
+      isEmpty(): boolean;
+      toJSON(): object;
+      toSpan(): LatLng;
+      toString(): string;
+      union(other: LatLngBounds): LatLngBounds;
     }
 
     interface MapsEventListener {
@@ -67,17 +84,11 @@ declare namespace google {
       anchor?: Point;
     }
 
-    interface LatLngBounds {
-      contains(latLng: LatLng | LatLngLiteral): boolean;
-      extend(latLng: LatLng | LatLngLiteral): LatLngBounds;
-      getCenter(): LatLng;
-      getNorthEast(): LatLng;
-      getSouthWest(): LatLng;
-      isEmpty(): boolean;
-      toJSON(): object;
-      toSpan(): LatLng;
-      toString(): string;
-      union(other: LatLngBounds): LatLngBounds;
+    interface Padding {
+      top: number;
+      right: number;
+      bottom: number;
+      left: number;
     }
     
     interface Symbol {
@@ -90,14 +101,16 @@ declare namespace google {
       strokeWeight?: number;
     }
 
-    interface Size {
+    class Size {
+      constructor(width: number, height: number, widthUnit?: string, heightUnit?: string);
       height: number;
       width: number;
       equals(other: Size): boolean;
       toString(): string;
     }
 
-    interface Point {
+    class Point {
+      constructor(x: number, y: number);
       x: number;
       y: number;
       equals(other: Point): boolean;
