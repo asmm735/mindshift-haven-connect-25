@@ -4,18 +4,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Timer, Volume2, Volume1, VolumeX, Music } from "lucide-react";
+import { Play, Pause, Timer, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
-type TimerMode = "focus" | "shortBreak" | "longBreak";
+type TimerMode = "focus";
 
 interface TimerSettings {
   focus: number;
-  shortBreak: number;
-  longBreak: number;
 }
 
 interface SoundOption {
@@ -26,52 +24,56 @@ interface SoundOption {
 
 const defaultSettings: TimerSettings = {
   focus: 25,
-  shortBreak: 5,
-  longBreak: 15,
 };
 
-// Corrected sound options with working URLs for better accessibility
+// We'll update sound options to fetch from Supabase in the future
 const soundOptions: SoundOption[] = [
-  { id: "rain", name: "Rain", src: "https://soundbible.com/mp3/rain_thunder-Mike_Koenig-694151151.mp3" }, 
-  { id: "forest", name: "Forest", src: "https://soundbible.com/mp3/forest-fire-daniel_simon.mp3" }, 
-  { id: "ocean", name: "Ocean Waves", src: "https://soundbible.com/mp3/Ocean_Waves-Mike_Koenig-980635285.mp3" }, 
-  { id: "bonfire", name: "Bonfire", src: "https://soundbible.com/mp3/Fire_Crackling-Mike_Koenig-1921202700.mp3" }, 
-  { id: "gamma", name: "Gamma Waves", src: "https://soundbible.com/mp3/meadow-ambience-daniel_simon.mp3" }, 
-  { id: "alpha", name: "Alpha Waves", src: "https://soundbible.com/mp3/bubbling-daniel_simon.mp3" }, 
-  { id: "beta", name: "Beta Waves", src: "https://soundbible.com/mp3/crossing_link-daniel_simon.mp3" }, 
+  { id: "rain", name: "Rain", src: "" }, 
+  { id: "forest", name: "Forest", src: "" }, 
+  { id: "ocean", name: "Ocean Waves", src: "" }, 
+  { id: "bonfire", name: "Bonfire", src: "" }, 
+  { id: "gamma", name: "Gamma Waves", src: "" }, 
+  { id: "alpha", name: "Alpha Waves", src: "" }, 
+  { id: "beta", name: "Beta Waves", src: "" }, 
 ];
 
-// Create notification sound URL with reliable source
 const notificationSoundUrl = "https://soundbible.com/mp3/Electronic_Chime-KevanGC-495939803.mp3";
 
 const PomodoroTimer = () => {
   const [settings, setSettings] = useState<TimerSettings>(defaultSettings);
-  const [currentMode, setCurrentMode] = useState<TimerMode>("focus");
   const [timeRemaining, setTimeRemaining] = useState(settings.focus * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [focusSessions, setFocusSessions] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [selectedSound, setSelectedSound] = useState<SoundOption>(soundOptions[0]);
-  const [volume, setVolume] = useState(90); // Set default volume to 90 (high)
+  const [volume, setVolume] = useState(100);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const notificationRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
-  // Initialize audio elements with preloading
+  // Only one mode now: focus
+  useEffect(() => {
+    setTimeRemaining(settings.focus * 60);
+    setIsRunning(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [settings]);
+
   useEffect(() => {
     if (typeof Audio !== 'undefined') {
-      // Create and configure audio elements
       audioRef.current = new Audio();
       audioRef.current.src = selectedSound.src;
       audioRef.current.loop = true;
       audioRef.current.volume = volume / 100;
-      audioRef.current.preload = "auto"; // Ensure preloading
+      audioRef.current.preload = "auto";
 
       notificationRef.current = new Audio();
       notificationRef.current.src = notificationSoundUrl;
       notificationRef.current.volume = 0.7;
-      notificationRef.current.preload = "auto"; // Ensure preloading
+      notificationRef.current.preload = "auto";
 
       return () => {
         if (audioRef.current) {
@@ -85,55 +87,39 @@ const PomodoroTimer = () => {
     }
   }, []);
 
-  // Update time remaining when mode or settings change
-  useEffect(() => {
-    setTimeRemaining(settings[currentMode] * 60);
-    setIsRunning(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, [currentMode, settings]);
-
-  // Handle sound selection
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = selectedSound.src;
       audioRef.current.loop = true;
       audioRef.current.volume = volume / 100;
-      
-      if (soundEnabled && isRunning) {
-        playAudio(audioRef.current);
+      if (soundEnabled && isRunning && selectedSound.src) {
+        audioRef.current.play().catch(() => {});
       }
     }
   }, [selectedSound]);
 
-  // Handle volume change
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume / 100;
     }
   }, [volume]);
 
-  // Handle sound toggle
   useEffect(() => {
     if (audioRef.current) {
-      if (soundEnabled && isRunning) {
-        playAudio(audioRef.current);
+      if (soundEnabled && isRunning && selectedSound.src) {
+        audioRef.current.play().catch(() => {});
       } else {
         audioRef.current.pause();
       }
     }
   }, [soundEnabled, isRunning]);
 
-  // Timer logic
   useEffect(() => {
     if (isRunning) {
       timerRef.current = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
-            // Timer finished
             handleTimerComplete();
             return 0;
           }
@@ -141,17 +127,14 @@ const PomodoroTimer = () => {
         });
       }, 1000);
 
-      // Start sound if enabled
-      if (soundEnabled && audioRef.current) {
-        playAudio(audioRef.current);
+      if (soundEnabled && audioRef.current && selectedSound.src) {
+        audioRef.current.play().catch(() => {});
       }
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      
-      // Pause sound if timer is not running
       if (audioRef.current) {
         audioRef.current.pause();
       }
@@ -165,62 +148,18 @@ const PomodoroTimer = () => {
     };
   }, [isRunning]);
 
-  // Helper function to play audio with error handling
-  const playAudio = (audio: HTMLAudioElement) => {
-    // Reset audio to beginning before playing
-    audio.currentTime = 0;
-    
-    const playPromise = audio.play();
-    
-    // Handle play() promise to catch any errors
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          // Audio playback started successfully
-        })
-        .catch(error => {
-          console.error("Audio playback error:", error);
-          // Try to recover by recreating the audio element
-          if (audio === audioRef.current && audioRef.current) {
-            const newAudio = new Audio(selectedSound.src);
-            newAudio.loop = true;
-            newAudio.volume = volume / 100;
-            audioRef.current = newAudio;
-            newAudio.play().catch(e => console.error("Recovery playback failed:", e));
-          }
-        });
-    }
-  };
-
   const handleTimerComplete = () => {
     setIsRunning(false);
-    
     // Play notification sound
     if (notificationRef.current) {
-      playAudio(notificationRef.current);
+      notificationRef.current.currentTime = 0;
+      notificationRef.current.play().catch(() => {});
     }
-    
-    if (currentMode === "focus") {
-      const newFocusSessions = focusSessions + 1;
-      setFocusSessions(newFocusSessions);
-      
-      toast({
-        title: "Focus session completed!",
-        description: "Great job! Take a well-deserved break.",
-      });
-      
-      if (newFocusSessions % 4 === 0) {
-        setCurrentMode("longBreak");
-      } else {
-        setCurrentMode("shortBreak");
-      }
-    } else {
-      setCurrentMode("focus");
-      toast({
-        title: "Break time over",
-        description: "Ready to focus again?",
-      });
-    }
+    setFocusSessions((prev) => prev + 1);
+    toast({
+      title: "Focus session completed!",
+      description: "Great job! Take a well-deserved break.",
+    });
   };
 
   const formatTime = (seconds: number): string => {
@@ -230,7 +169,7 @@ const PomodoroTimer = () => {
   };
 
   const calculateProgress = (): number => {
-    const totalSeconds = settings[currentMode] * 60;
+    const totalSeconds = settings.focus * 60;
     return ((totalSeconds - timeRemaining) / totalSeconds) * 100;
   };
 
@@ -240,14 +179,11 @@ const PomodoroTimer = () => {
 
   const handleReset = () => {
     setIsRunning(false);
-    setTimeRemaining(settings[currentMode] * 60);
+    setTimeRemaining(settings.focus * 60);
   };
 
   const handleSettingChange = (mode: keyof TimerSettings, value: number[]) => {
-    setSettings({
-      ...settings,
-      [mode]: value[0],
-    });
+    setSettings({...settings, [mode]: value[0]});
   };
 
   const handleSoundToggle = (checked: boolean) => {
@@ -256,41 +192,16 @@ const PomodoroTimer = () => {
 
   const handleSoundSelection = (soundId: string) => {
     const sound = soundOptions.find(s => s.id === soundId);
-    if (sound) {
-      setSelectedSound(sound);
-    }
+    if (sound) setSelectedSound(sound);
   };
 
-  // Function to switch timer modes directly
-  const switchTimerMode = (mode: TimerMode) => {
-    setCurrentMode(mode);
-    setTimeRemaining(settings[mode] * 60);
-    setIsRunning(false);
-    
-    // Stop any running intervals
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  // Helper function to preview audio
+  // Helper to play sound preview
   const previewAudio = (sound: SoundOption) => {
-    // Create a temporary audio element for preview
-    const previewAudio = new Audio(sound.src);
-    previewAudio.volume = volume / 100;
-    
-    const playPromise = previewAudio.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.catch(e => console.error("Audio preview failed:", e));
-      
-      // Play for 3 seconds then pause
-      setTimeout(() => {
-        previewAudio.pause();
-        previewAudio.remove(); // Clean up
-      }, 3000);
-    }
+    if (!sound.src) return;
+    const audio = new Audio(sound.src);
+    audio.volume = volume / 100;
+    audio.play().catch(() => {});
+    setTimeout(() => audio.pause(), 3000);
   };
 
   return (
@@ -304,42 +215,13 @@ const PomodoroTimer = () => {
           Boost your productivity with timed work and break sessions
         </CardDescription>
       </CardHeader>
-      
       <CardContent className="space-y-6">
         <Tabs defaultValue="timer" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="timer">Timer</TabsTrigger>
             <TabsTrigger value="sounds">Sound Therapy</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
-          
           <TabsContent value="timer" className="space-y-4">
-            <div className="flex justify-center mb-6">
-              <TabsList className="grid grid-cols-3">
-                <TabsTrigger 
-                  value="focus" 
-                  onClick={() => switchTimerMode("focus")}
-                  className={currentMode === "focus" ? "bg-mindshift-raspberry text-white" : ""}
-                >
-                  Focus
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="shortBreak" 
-                  onClick={() => switchTimerMode("shortBreak")}
-                  className={currentMode === "shortBreak" ? "bg-mindshift-lavender text-white" : ""}
-                >
-                  Short Break
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="longBreak" 
-                  onClick={() => switchTimerMode("longBreak")}
-                  className={currentMode === "longBreak" ? "bg-mindshift-dark text-white" : ""}
-                >
-                  Long Break
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            
             <div className="text-center space-y-4">
               <div className="relative w-64 h-64 mx-auto">
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -358,13 +240,7 @@ const PomodoroTimer = () => {
                     cy="50"
                   />
                   <circle
-                    className={`${
-                      currentMode === "focus" 
-                        ? "text-mindshift-raspberry" 
-                        : currentMode === "shortBreak" 
-                          ? "text-mindshift-lavender" 
-                          : "text-mindshift-dark"
-                    }`}
+                    className="text-mindshift-raspberry"
                     strokeWidth="4"
                     strokeDasharray={283}
                     strokeDashoffset={283 - (283 * calculateProgress()) / 100}
@@ -377,29 +253,18 @@ const PomodoroTimer = () => {
                   />
                 </svg>
               </div>
-              
               <div className="flex justify-center gap-4">
-                <Button 
-                  onClick={handleStartPause}
-                  className="mindshift-button px-6 py-2 rounded-full"
-                >
+                <Button onClick={handleStartPause} className="mindshift-button px-6 py-2 rounded-full">
                   {isRunning ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
                   {isRunning ? "Pause" : "Start"}
                 </Button>
-                
-                <Button 
-                  onClick={handleReset}
-                  variant="outline"
-                  className="px-6 py-2 rounded-full"
-                >
+                <Button onClick={handleReset} variant="outline" className="px-6 py-2 rounded-full">
                   Reset
                 </Button>
               </div>
-              
               <div className="mt-4 text-sm text-gray-600">
                 Session count: {focusSessions}
               </div>
-
               {/* Sound Quick Toggle */}
               <div className="flex items-center justify-center space-x-2 mt-4 pt-2 border-t border-gray-100">
                 <Label htmlFor="sound-toggle" className="text-sm text-gray-600">Background Sound</Label>
@@ -431,7 +296,6 @@ const PomodoroTimer = () => {
               </div>
             </div>
           </TabsContent>
-          
           <TabsContent value="sounds" className="space-y-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -445,7 +309,6 @@ const PomodoroTimer = () => {
                   onCheckedChange={handleSoundToggle}
                 />
               </div>
-
               <div className={`space-y-4 ${!soundEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Select Sound</label>
@@ -463,7 +326,7 @@ const PomodoroTimer = () => {
                           size="sm" 
                           className="h-8 w-8 p-0"
                           onClick={(e) => {
-                            e.preventDefault(); // Prevent changing selection
+                            e.preventDefault();
                             previewAudio(sound);
                           }}
                         >
@@ -473,19 +336,12 @@ const PomodoroTimer = () => {
                     ))}
                   </RadioGroup>
                 </div>
-
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium">Volume: {volume}%</label>
                     <div className="flex items-center gap-2">
-                      <VolumeX 
-                        className="h-4 w-4 cursor-pointer" 
-                        onClick={() => setVolume(0)}
-                      />
-                      <Volume2 
-                        className="h-4 w-4 cursor-pointer" 
-                        onClick={() => setVolume(100)}
-                      />
+                      <VolumeX className="h-4 w-4 cursor-pointer" onClick={() => setVolume(0)} />
+                      <Volume2 className="h-4 w-4 cursor-pointer" onClick={() => setVolume(100)} />
                     </div>
                   </div>
                   <Slider
@@ -496,7 +352,6 @@ const PomodoroTimer = () => {
                     onValueChange={(value) => setVolume(value[0])}
                   />
                 </div>
-                
                 <div className="pt-2 border-t border-gray-100">
                   <p className="text-xs text-gray-500">
                     Sound will play automatically when the timer is running. You can 
@@ -506,62 +361,8 @@ const PomodoroTimer = () => {
               </div>
             </div>
           </TabsContent>
-          
-          <TabsContent value="settings" className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Focus Duration: {settings.focus} min</label>
-                <Slider
-                  value={[settings.focus]}
-                  min={5}
-                  max={60}
-                  step={5}
-                  onValueChange={(value) => handleSettingChange("focus", value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Short Break: {settings.shortBreak} min</label>
-                <Slider
-                  value={[settings.shortBreak]}
-                  min={1}
-                  max={15}
-                  step={1}
-                  onValueChange={(value) => handleSettingChange("shortBreak", value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Long Break: {settings.longBreak} min</label>
-                <Slider
-                  value={[settings.longBreak]}
-                  min={10}
-                  max={30}
-                  step={5}
-                  onValueChange={(value) => handleSettingChange("longBreak", value)}
-                />
-              </div>
-              
-              {/* Test notification sound */}
-              <div className="pt-4 border-t border-gray-100">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (notificationRef.current) {
-                      playAudio(notificationRef.current);
-                    }
-                  }}
-                  className="w-full"
-                >
-                  Test Notification Sound
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
         </Tabs>
       </CardContent>
-      
       <CardFooter className="flex justify-center">
         <p className="text-xs text-gray-500 text-center">
           The Pomodoro Technique helps you maintain focus and take regular breaks for optimal productivity.
@@ -572,3 +373,4 @@ const PomodoroTimer = () => {
 };
 
 export default PomodoroTimer;
+
