@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,12 +33,10 @@ const MoodTracker = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Determine if user submitted for today
   const todayISO = format(new Date(), "yyyy-MM-dd");
-  const hasToday = moodHistory.some(entry => entry.entry_date === todayISO);
+  const todayEntry = moodHistory.find(entry => entry.entry_date === todayISO);
 
   useEffect(() => {
-    // Get the current user
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -52,7 +49,6 @@ const MoodTracker = () => {
     
     checkUser();
     
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUserId(session.user.id);
@@ -76,7 +72,7 @@ const MoodTracker = () => {
       .select("*")
       .eq("user_id", userId)
       .order("entry_date", { ascending: true })
-      .limit(14); // show up to 2 weeks for more continuity
+      .limit(14);
 
     if (error) {
       toast({ title: "Failed to load mood history", variant: "destructive" });
@@ -86,8 +82,17 @@ const MoodTracker = () => {
     setLoading(false);
   };
 
-  const handleMoodSelect = (value: string) => setSelectedMood(value);
+  useEffect(() => {
+    if (todayEntry) {
+      setSelectedMood(todayEntry.mood.toString());
+      setNotes(todayEntry.notes || "");
+    } else {
+      setSelectedMood("");
+      setNotes("");
+    }
+  }, [userId, todayEntry?.mood, todayEntry?.notes]);
 
+  const handleMoodSelect = (value: string) => setSelectedMood(value);
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value);
 
   const handleSubmit = async () => {
@@ -95,32 +100,44 @@ const MoodTracker = () => {
       toast({ title: "Please select a mood", variant: "destructive" });
       return;
     }
-    
     if (!userId) {
       toast({ title: "You must be signed in to log your mood", variant: "destructive" });
       return;
     }
-    
     setIsSubmitting(true);
-    const { error } = await supabase.from('mood_entries').insert({
-      mood: parseInt(selectedMood),
-      notes,
-      entry_date: todayISO,
-      user_id: userId
-    });
-    setIsSubmitting(false);
 
-    if (error) {
-      toast({ title: "Submission failed", description: error.message, variant: "destructive" });
+    if (todayEntry) {
+      const { error } = await supabase
+        .from('mood_entries')
+        .update({ mood: parseInt(selectedMood), notes })
+        .eq('user_id', userId)
+        .eq('entry_date', todayISO);
+      setIsSubmitting(false);
+
+      if (error) {
+        toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Mood updated!" });
+        fetchMoodHistory(userId);
+      }
     } else {
-      toast({ title: "Mood logged successfully", description: "Your mood has been recorded for today." });
-      setSelectedMood("");
-      setNotes("");
-      fetchMoodHistory(userId);
+      const { error } = await supabase.from('mood_entries').insert({
+        mood: parseInt(selectedMood),
+        notes,
+        entry_date: todayISO,
+        user_id: userId
+      });
+      setIsSubmitting(false);
+
+      if (error) {
+        toast({ title: "Submission failed", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Mood logged successfully", description: "Your mood has been recorded for today." });
+        fetchMoodHistory(userId);
+      }
     }
   };
 
-  // Custom tooltip for the chart
   const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       const moodValue = payload[0].value;
@@ -142,7 +159,6 @@ const MoodTracker = () => {
     return null;
   };
 
-  // Prepare data for graph
   const chartData = moodHistory.map(item => ({
     name: format(new Date(item.entry_date), "MMM dd"),
     mood: item.mood,
@@ -152,11 +168,11 @@ const MoodTracker = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-      {!loading && !hasToday && userId && (
+      {!loading && userId && (
         <Card className="mindshift-card">
           <CardHeader>
             <CardTitle className="text-2xl text-mindshift-raspberry">How are you feeling today?</CardTitle>
-            <CardDescription>Track your mood to identify patterns and improve your well-being</CardDescription>
+            <CardDescription>Track your mood to identify patterns and improve your well-being.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -196,7 +212,7 @@ const MoodTracker = () => {
               disabled={isSubmitting}
               className="w-full mindshift-button"
             >
-              {isSubmitting ? "Logging mood..." : "Log your mood"}
+              {isSubmitting ? "Saving..." : (todayEntry ? "Update Mood" : "Log your mood")}
             </Button>
           </CardFooter>
         </Card>
