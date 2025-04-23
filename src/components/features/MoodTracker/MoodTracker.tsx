@@ -1,19 +1,21 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from "recharts";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { Smile, Meh, Frown, Calendar } from "lucide-react";
 
 const moodOptions = [
-  { label: "Very Happy", value: 5, color: "#4ADE80" },
-  { label: "Happy", value: 4, color: "#A3E635" },
-  { label: "Neutral", value: 3, color: "#FBBF24" },
-  { label: "Sad", value: 2, color: "#FB923C" },
-  { label: "Very Sad", value: 1, color: "#F87171" },
+  { label: "Very Happy", value: 5, color: "#4ADE80", icon: <Smile className="w-6 h-6" /> },
+  { label: "Happy", value: 4, color: "#A3E635", icon: <Smile className="w-6 h-6" /> },
+  { label: "Neutral", value: 3, color: "#FBBF24", icon: <Meh className="w-6 h-6" /> },
+  { label: "Sad", value: 2, color: "#FB923C", icon: <Meh className="w-6 h-6" /> },
+  { label: "Very Sad", value: 1, color: "#F87171", icon: <Frown className="w-6 h-6" /> },
 ];
 
 type MoodEntry = {
@@ -72,6 +74,7 @@ const MoodTracker = () => {
     const { data, error } = await supabase
       .from("mood_entries")
       .select("*")
+      .eq("user_id", userId)
       .order("entry_date", { ascending: true })
       .limit(14); // show up to 2 weeks for more continuity
 
@@ -117,6 +120,28 @@ const MoodTracker = () => {
     }
   };
 
+  // Custom tooltip for the chart
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+    if (active && payload && payload.length) {
+      const moodValue = payload[0].value;
+      const moodLabel = moodOptions.find(option => option.value === moodValue)?.label;
+      const entryData = moodHistory.find(entry => format(new Date(entry.entry_date), "MMM dd") === label);
+      
+      return (
+        <div className="bg-white p-3 shadow-md rounded-md border border-gray-200">
+          <p className="font-medium">{label}</p>
+          <p className="text-mindshift-raspberry">{moodLabel}</p>
+          {entryData?.notes && (
+            <p className="text-sm text-gray-600 mt-1 max-w-xs whitespace-normal break-words">
+              {entryData.notes}
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
   // Prepare data for graph
   const chartData = moodHistory.map(item => ({
     name: format(new Date(item.entry_date), "MMM dd"),
@@ -147,7 +172,9 @@ const MoodTracker = () => {
                     }`}
                     onClick={() => handleMoodSelect(option.value.toString())}
                   >
-                    <div className="w-6 h-6 rounded-full mb-1" style={{ backgroundColor: option.color }} />
+                    <div className="w-8 h-8 rounded-full mb-1 flex items-center justify-center" style={{ color: option.color }}>
+                      {option.icon}
+                    </div>
                     <span className="text-xs">{option.label}</span>
                   </button>
                 ))}
@@ -174,7 +201,7 @@ const MoodTracker = () => {
           </CardFooter>
         </Card>
       )}
-      <Card className="mindshift-card">
+      <Card className="mindshift-card md:col-span-2">
         <CardHeader>
           <CardTitle className="text-2xl text-mindshift-raspberry">Your Mood History</CardTitle>
           <CardDescription>View your mood trends over the past weeks</CardDescription>
@@ -183,7 +210,9 @@ const MoodTracker = () => {
           {loading ? (
             <div className="flex items-center justify-center h-full">Loading...</div>
           ) : !userId ? (
-            <div className="text-center text-gray-500 my-14">Please sign in to see your mood history.</div>
+            <div className="text-center text-gray-500 my-14">
+              Please <a href="/login" className="text-mindshift-raspberry hover:underline">sign in</a> to see your mood history.
+            </div>
           ) : chartData.length === 0 ? (
             <div className="text-center text-gray-500 my-14">No mood entries yet.</div>
           ) : (
@@ -200,13 +229,7 @@ const MoodTracker = () => {
                     return mood ? mood.label.split(" ")[0] : "";
                   }}
                 />
-                <Tooltip 
-                  formatter={(value, name) => {
-                    const mood = moodOptions.find(m => m.value === value);
-                    return [mood?.label || "Unknown", "Mood"];
-                  }}
-                  labelFormatter={label => `Date: ${label}`}
-                />
+                <Tooltip content={<CustomTooltip />} />
                 <Line
                   type="monotone"
                   dataKey="mood"
@@ -221,8 +244,12 @@ const MoodTracker = () => {
         </CardContent>
         <CardFooter className="justify-center">
           <Alert className="bg-mindshift-light border-mindshift-lavender">
-            <AlertDescription>
-              Tracking your mood regularly can help you understand patterns and triggers in your emotional well-being.
+            <AlertDescription className="flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-mindshift-raspberry" />
+              {hasToday ? 
+                "You've tracked your mood today. Come back tomorrow for another entry!" : 
+                "Tracking your mood regularly helps you understand patterns and triggers in your emotional well-being."
+              }
             </AlertDescription>
           </Alert>
         </CardFooter>

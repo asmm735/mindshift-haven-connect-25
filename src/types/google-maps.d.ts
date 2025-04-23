@@ -6,6 +6,8 @@ declare namespace google {
       setCenter(latLng: LatLng | LatLngLiteral): void;
       setZoom(zoom: number): void;
       setOptions(options: MapOptions): void;
+      getCenter(): LatLng;
+      getBounds(): LatLngBounds;
     }
 
     class Marker {
@@ -13,30 +15,112 @@ declare namespace google {
       setMap(map: Map | null): void;
       setPosition(latLng: LatLng | LatLngLiteral): void;
       setTitle(title: string): void;
+      addListener(event: string, handler: Function): MapsEventListener;
+    }
+
+    class InfoWindow {
+      constructor(opts?: InfoWindowOptions);
+      setContent(content: string | Node): void;
+      open(map: Map, anchor?: Marker): void;
+      close(): void;
+    }
+
+    interface MapsEventListener {
+      remove(): void;
+    }
+
+    interface InfoWindowOptions {
+      content?: string | Node;
+      position?: LatLng | LatLngLiteral;
+      maxWidth?: number;
     }
 
     interface MapOptions {
       center?: LatLng | LatLngLiteral;
       zoom?: number;
       mapTypeId?: string;
+      styles?: any[];
     }
 
     interface MarkerOptions {
       position: LatLng | LatLngLiteral;
       map?: Map;
       title?: string;
-      label?: string;
+      label?: string | MarkerLabel;
       animation?: number;
+      icon?: string | Icon | Symbol;
+    }
+
+    interface MarkerLabel {
+      text: string;
+      color?: string;
+      fontFamily?: string;
+      fontSize?: string;
+      fontWeight?: string;
+    }
+
+    interface Icon {
+      url: string;
+      size?: Size;
+      scaledSize?: Size;
+      origin?: Point;
+      anchor?: Point;
+    }
+
+    interface LatLngBounds {
+      contains(latLng: LatLng | LatLngLiteral): boolean;
+      extend(latLng: LatLng | LatLngLiteral): LatLngBounds;
+      getCenter(): LatLng;
+      getNorthEast(): LatLng;
+      getSouthWest(): LatLng;
+      isEmpty(): boolean;
+      toJSON(): object;
+      toSpan(): LatLng;
+      toString(): string;
+      union(other: LatLngBounds): LatLngBounds;
+    }
+    
+    interface Symbol {
+      path: string | number;
+      fillColor?: string;
+      fillOpacity?: number;
+      scale?: number;
+      strokeColor?: string;
+      strokeOpacity?: number;
+      strokeWeight?: number;
+    }
+
+    interface Size {
+      height: number;
+      width: number;
+      equals(other: Size): boolean;
+      toString(): string;
+    }
+
+    interface Point {
+      x: number;
+      y: number;
+      equals(other: Point): boolean;
+      toString(): string;
     }
 
     interface LatLng {
       lat(): number;
       lng(): number;
+      equals(other: LatLng): boolean;
+      toString(): string;
+      toJSON(): object;
+      toUrlValue(precision?: number): string;
     }
 
     interface LatLngLiteral {
       lat: number;
       lng: number;
     }
+    
+    const Animation: {
+      BOUNCE: number;
+      DROP: number;
+    };
   }
 }

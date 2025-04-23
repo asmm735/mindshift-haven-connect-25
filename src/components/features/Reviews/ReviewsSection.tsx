@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Star, User } from "lucide-react";
 
 type Review = {
   id: string;
   user_id: string;
   content: string;
-  rating: number;
+  rating: number | null;
   created_at: string;
 };
 
@@ -61,9 +62,13 @@ const ReviewsSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content || !rating || !userId) {
-      toast({ title: "Please fill all fields", variant: "destructive" });
+      toast({ 
+        title: !userId ? "Please sign in to post a review" : "Please fill all fields", 
+        variant: "destructive" 
+      });
       return;
     }
+    
     setIsSubmitting(true);
     const { error } = await supabase.from("reviews").insert({
       content,
@@ -71,14 +76,31 @@ const ReviewsSection = () => {
       user_id: userId
     });
     setIsSubmitting(false);
+    
     if (error) {
-      toast({ title: "Failed to submit review", description: error.message, variant: "destructive" });
+      toast({ 
+        title: "Failed to submit review", 
+        description: error.message, 
+        variant: "destructive" 
+      });
     } else {
       setContent("");
       setRating(5);
-      toast({ title: "Thank you!", description: "Your review has been submitted." });
+      toast({ 
+        title: "Thank you!", 
+        description: "Your review has been submitted." 
+      });
       fetchReviews();
     }
+  };
+
+  const renderStars = (count: number) => {
+    return Array(5).fill(0).map((_, i) => (
+      <Star 
+        key={i} 
+        className={`h-4 w-4 ${i < count ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`} 
+      />
+    ));
   };
 
   return (
@@ -88,16 +110,21 @@ const ReviewsSection = () => {
       </CardHeader>
       <CardContent>
         {reviews.length === 0 ? (
-          <p className="text-gray-500">No reviews yet.</p>
+          <p className="text-gray-500">No reviews yet. Be the first to share your experience!</p>
         ) : (
           <div className="space-y-6">
             {reviews.map(review => (
               <div key={review.id} className="border-b pb-4 mb-4">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-mindshift-raspberry">{Array(review.rating).fill("★").join("")}</span>
-                  <span className="text-xs text-gray-500 ml-2">{new Date(review.created_at).toLocaleDateString()}</span>
+                  <User size={20} className="text-mindshift-raspberry" />
+                  <div className="flex items-center">
+                    {review.rating && renderStars(review.rating)}
+                  </div>
+                  <span className="text-xs text-gray-500 ml-2">
+                    {new Date(review.created_at).toLocaleDateString()}
+                  </span>
                 </div>
-                <div className="mt-1 text-sm">{review.content}</div>
+                <div className="mt-2 text-sm">{review.content}</div>
               </div>
             ))}
           </div>
@@ -116,16 +143,25 @@ const ReviewsSection = () => {
             />
             <div className="flex items-center gap-2">
               <label>Rating:</label>
-              <Input
-                type="number"
-                value={rating}
-                min={1}
-                max={5}
-                onChange={e => setRating(Number(e.target.value))}
-                className="w-16"
-                required
-              />
-              <Button type="submit" disabled={isSubmitting} className="ml-auto mindshift-button">{isSubmitting ? "Submitting..." : "Submit Review"}</Button>
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    className="focus:outline-none"
+                  >
+                    <Star
+                      className={`h-5 w-5 cursor-pointer ${
+                        star <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <Button type="submit" disabled={isSubmitting} className="ml-auto mindshift-button">
+                {isSubmitting ? "Submitting..." : "Submit Review"}
+              </Button>
             </div>
           </form>
         </CardFooter>
@@ -133,7 +169,7 @@ const ReviewsSection = () => {
       {!canPost && (
         <CardFooter>
           <div className="text-sm text-gray-500">
-            Please sign in to write a review.
+            Please <a href="/login" className="text-mindshift-raspberry hover:underline">sign in</a> to write a review.
           </div>
         </CardFooter>
       )}

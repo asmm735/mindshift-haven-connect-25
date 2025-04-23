@@ -1,11 +1,11 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import TheraConnectMap from "./TheraConnectMap";
+import { MapPin, Check } from "lucide-react";
 
 type Therapist = {
   id: string;
@@ -20,36 +20,38 @@ type Therapist = {
 
 const TheraConnect = () => {
   const [location, setLocation] = useState<string>("Mumbai");
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [filteredTherapists, setFilteredTherapists] = useState<Therapist[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchTherapists = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("therapists")
       .select("*")
       .in("city", ["Mumbai", "Navi Mumbai"])
       .eq("verified", true);
-    if (!error) {
+      
+    if (!error && data) {
       setTherapists(data);
       setFilteredTherapists(data);
+    } else {
+      console.error("Error fetching therapists:", error);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchTherapists();
   }, []);
 
-  const handleSearch = () => {
-    const query = searchQuery.toLowerCase();
-    setFilteredTherapists(
-      therapists.filter(
-        t =>
-          t.name.toLowerCase().includes(query) ||
-          (t.description?.toLowerCase() ?? "").includes(query) ||
-          t.address.toLowerCase().includes(query)
-      )
-    );
+  const handleLocationChange = (city: string) => {
+    setLocation(city);
+    if (city === "All") {
+      setFilteredTherapists(therapists);
+    } else {
+      setFilteredTherapists(therapists.filter(t => t.city === city));
+    }
   };
 
   return (
@@ -64,25 +66,36 @@ const TheraConnect = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Your Location</label>
-              <Input
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                disabled
-                className="pl-3"
-                placeholder="Mumbai"
-              />
+              <label className="text-sm font-medium">Filter by Location</label>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  size="sm"
+                  variant={location === "All" ? "default" : "outline"}
+                  onClick={() => handleLocationChange("All")}
+                  className={location === "All" ? "bg-mindshift-raspberry" : ""}
+                >
+                  All Locations
+                </Button>
+                <Button 
+                  size="sm"
+                  variant={location === "Mumbai" ? "default" : "outline"}
+                  onClick={() => handleLocationChange("Mumbai")}
+                  className={location === "Mumbai" ? "bg-mindshift-raspberry" : ""}
+                >
+                  <MapPin size={14} className="mr-1" />
+                  Mumbai
+                </Button>
+                <Button 
+                  size="sm"
+                  variant={location === "Navi Mumbai" ? "default" : "outline"}
+                  onClick={() => handleLocationChange("Navi Mumbai")}
+                  className={location === "Navi Mumbai" ? "bg-mindshift-raspberry" : ""}
+                >
+                  <MapPin size={14} className="mr-1" />
+                  Navi Mumbai
+                </Button>
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Search Therapist</label>
-              <Input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-3"
-                placeholder="e.g., Dr. Patel"
-              />
-            </div>
-            <Button onClick={handleSearch} className="w-full mindshift-button">Search Therapists</Button>
             <Separator className="my-4" />
             <TheraConnectMap therapists={filteredTherapists
               .filter(t => (t.latitude && t.longitude))
@@ -98,26 +111,49 @@ const TheraConnect = () => {
       </div>
       <div className="lg:col-span-2 space-y-6">
         <h2 className="text-2xl font-serif text-mindshift-raspberry">
-          {filteredTherapists.length === 0
-            ? "No therapists found"
-            : `${filteredTherapists.length} verified therapists in Mumbai & Navi Mumbai`}
+          {loading ? "Loading therapists..." : 
+            filteredTherapists.length === 0
+              ? "No therapists found"
+              : `${filteredTherapists.length} verified therapists ${location !== "All" ? `in ${location}` : "in Mumbai & Navi Mumbai"}`
+          }
         </h2>
-        {filteredTherapists.length === 0 ? (
+        {loading ? (
           <Card className="mindshift-card p-8 text-center">
-            <p className="text-gray-500 mb-4">No therapists match your search criteria.</p>
-            <Button variant="outline" onClick={() => setFilteredTherapists(therapists)}>
-              Clear Search
+            <p className="text-gray-500">Loading therapists data...</p>
+          </Card>
+        ) : filteredTherapists.length === 0 ? (
+          <Card className="mindshift-card p-8 text-center">
+            <p className="text-gray-500 mb-4">No therapists match your criteria.</p>
+            <Button variant="outline" onClick={() => handleLocationChange("All")}>
+              View All Locations
             </Button>
           </Card>
         ) : (
           <div className="space-y-6">
             {filteredTherapists.map(therapist => (
-              <Card className="p-4" key={therapist.id}>
-                <CardTitle>{therapist.name}</CardTitle>
-                <CardDescription>{therapist.description}</CardDescription>
-                <p className="mt-2 text-sm text-gray-700">{therapist.address} <span className="font-semibold">({therapist.city})</span></p>
+              <Card className="p-6 hover:shadow-md transition-shadow" key={therapist.id}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-xl text-mindshift-raspberry flex items-center">
+                      {therapist.name}
+                      {therapist.verified && (
+                        <Check size={16} className="ml-2 text-green-600" />
+                      )}
+                    </CardTitle>
+                    <CardDescription className="mt-1">{therapist.description}</CardDescription>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm text-gray-700 flex items-start">
+                  <MapPin size={16} className="mr-1 mt-0.5 flex-shrink-0 text-mindshift-raspberry" />
+                  <span>
+                    {therapist.address} 
+                    <span className="font-medium ml-1">({therapist.city})</span>
+                  </span>
+                </p>
                 {therapist.verified && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs mt-2 inline-block">Verified</span>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs mt-4 inline-block">
+                    Verified Professional
+                  </span>
                 )}
               </Card>
             ))}
