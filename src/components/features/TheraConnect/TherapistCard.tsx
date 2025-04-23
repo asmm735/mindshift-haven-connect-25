@@ -4,20 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Phone } from "lucide-react";
-
-interface Therapist {
-  id: number;
-  name: string;
-  title: string;
-  specialty: string | undefined | null;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  address: string;
-  phone: string;
-  distance: string;
-  accepting: boolean;
-}
+import { Therapist } from "./TheraConnectMap";
 
 interface TherapistCardProps {
   therapist: Therapist;
