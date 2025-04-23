@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Check } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 // Simple wrapper for embedding Google Maps
 // Expects an array of therapists with lat/lng and verified status
@@ -18,6 +18,7 @@ type Therapist = {
 type MapProps = { therapists: Therapist[] };
 
 const MAP_API_KEY = "AIzaSyD-W6vxaBSr4lqN86sDcigH6_6ZdEQDm5Q"; // For demo purposes only
+const SCRIPT_ID = "google-maps-script"; // Consistent ID for the script element
 
 const TheraConnectMap = ({ therapists }: MapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -26,32 +27,61 @@ const TheraConnectMap = ({ therapists }: MapProps) => {
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const toast = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isScriptLoading, setIsScriptLoading] = useState(false);
   
   // Initialize map when component mounts
   useEffect(() => {
-    // Load the Google Maps script if it hasn't been loaded yet
-    if (!window.google && !document.getElementById("gmap-script")) {
+    // Check if the script is already loaded
+    if (window.google?.maps) {
+      setIsLoaded(true);
+      initMap();
+      return;
+    }
+
+    // Prevent duplicate script loading
+    if (document.getElementById(SCRIPT_ID)) {
+      // Script is already being loaded by another instance
+      const waitForLoad = setInterval(() => {
+        if (window.google?.maps) {
+          clearInterval(waitForLoad);
+          setIsLoaded(true);
+          initMap();
+        }
+      }, 100);
+      
+      return () => clearInterval(waitForLoad);
+    }
+
+    if (!isScriptLoading) {
+      setIsScriptLoading(true);
       const script = document.createElement("script");
-      script.id = "gmap-script";
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${MAP_API_KEY}`;
+      script.id = SCRIPT_ID;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${MAP_API_KEY}&callback=Function.prototype`;
       script.async = true;
       script.defer = true;
+      
       script.onload = () => {
         setIsLoaded(true);
+        setIsScriptLoading(false);
         initMap();
       };
+      
       script.onerror = () => {
+        setIsScriptLoading(false);
         toast.toast({
           title: "Error loading map",
           description: "Could not load Google Maps. Please try again later.",
           variant: "destructive"
         });
       };
+      
       document.body.appendChild(script);
-    } else if (window.google) {
-      setIsLoaded(true);
-      initMap();
     }
+
+    // Cleanup when component unmounts
+    return () => {
+      clearMapMarkers();
+    };
   }, []);
 
   // Update markers when therapists change
@@ -61,31 +91,60 @@ const TheraConnectMap = ({ therapists }: MapProps) => {
     }
   }, [therapists, isLoaded]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearMapMarkers();
+      
+      // Close info window if open
+      if (infoWindowRef.current) {
+        infoWindowRef.current.close();
+      }
+    };
+  }, []);
+
+  // Clear all map markers
+  const clearMapMarkers = () => {
+    if (markersRef.current.length > 0) {
+      markersRef.current.forEach(marker => {
+        if (marker) {
+          // Remove event listeners and then remove from map
+          google.maps.event.clearInstanceListeners(marker);
+          marker.setMap(null);
+        }
+      });
+      markersRef.current = [];
+    }
+  };
+
   // Initialize the map
   const initMap = () => {
     if (!mapRef.current || !window.google) return;
     
     try {
-      // Create info window instance
-      infoWindowRef.current = new window.google.maps.InfoWindow();
-      
-      // Create map instance
-      mapInstance.current = new window.google.maps.Map(mapRef.current, {
-        zoom: 12,
-        center: { lat: 19.076, lng: 72.8777 }, // Mumbai
-        mapTypeId: "roadmap",
-        styles: [
-          {
-            "featureType": "poi.medical",
-            "elementType": "geometry",
-            "stylers": [{ "visibility": "on" }, { "color": "#f5d8e9" }]
-          },
-          {
-            "featureType": "water",
-            "stylers": [{ "color": "#d3eaf8" }]
-          }
-        ]
-      });
+      // Only create map instance if it doesn't exist
+      if (!mapInstance.current) {
+        // Create info window instance
+        infoWindowRef.current = new window.google.maps.InfoWindow();
+        
+        // Create map instance
+        mapInstance.current = new window.google.maps.Map(mapRef.current, {
+          zoom: 12,
+          center: { lat: 19.076, lng: 72.8777 }, // Mumbai
+          mapTypeId: "roadmap",
+          styles: [
+            {
+              "featureType": "poi.medical",
+              "elementType": "geometry",
+              "stylers": [{ "visibility": "on" }, { "color": "#f5d8e9" }]
+            },
+            {
+              "featureType": "water",
+              "stylers": [{ "color": "#d3eaf8" }]
+            }
+          ]
+        });
+      }
       
       updateMarkers();
     } catch (error) {
@@ -97,9 +156,8 @@ const TheraConnectMap = ({ therapists }: MapProps) => {
   const updateMarkers = () => {
     if (!mapInstance.current || !window.google) return;
     
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
+    // Clear existing markers first
+    clearMapMarkers();
     
     // Add therapists as markers
     therapists.forEach((therapist) => {
@@ -146,21 +204,28 @@ const TheraConnectMap = ({ therapists }: MapProps) => {
     if (markersRef.current.length > 0 && mapInstance.current) {
       try {
         const bounds = new window.google.maps.LatLngBounds();
+        let validMarkerFound = false;
+        
         markersRef.current.forEach(marker => {
           const position = marker.getPosition();
           if (position) {
             bounds.extend(position);
+            validMarkerFound = true;
           }
         });
         
-        if (!bounds.isEmpty()) {
+        if (validMarkerFound && mapInstance.current) {
           mapInstance.current.fitBounds(bounds);
           
           // Don't zoom in too far
-          const zoom = mapInstance.current.getZoom();
-          if (zoom && zoom > 15) {
-            mapInstance.current.setZoom(15);
-          }
+          setTimeout(() => {
+            if (mapInstance.current) {
+              const zoom = mapInstance.current.getZoom();
+              if (zoom && zoom > 15) {
+                mapInstance.current.setZoom(15);
+              }
+            }
+          }, 100);
         }
       } catch (error) {
         console.error("Error setting map bounds:", error);
