@@ -262,7 +262,7 @@ const MoodTracker = () => {
           <Alert className="bg-mindshift-light border-mindshift-lavender">
             <AlertDescription className="flex items-center">
               <Calendar className="h-4 w-4 mr-2 text-mindshift-raspberry" />
-              {hasToday ? 
+              {todayEntry ? 
                 "You've tracked your mood today. Come back tomorrow for another entry!" : 
                 "Tracking your mood regularly helps you understand patterns and triggers in your emotional well-being."
               }
