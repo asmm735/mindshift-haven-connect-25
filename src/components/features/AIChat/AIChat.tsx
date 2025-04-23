@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -222,6 +223,8 @@ const AIChat = () => {
     setIsBreathing(true);
     
     let currentStep = 0;
+    let stepTimeElapsed = 0;
+    const stepCheckInterval = 500; // Check every 500ms for smoother transitions
     
     const aiMessage: Message = {
       id: messages.length + 1,
@@ -233,10 +236,20 @@ const AIChat = () => {
     setMessages(prev => [...prev, aiMessage]);
     saveMessage(aiMessage);
     
+    // Use a more frequent interval check for smoother transitions but respect the duration
     breathingIntervalRef.current = setInterval(() => {
-      setBreathingStep(currentStep % exercise.steps.length);
-      currentStep++;
-    }, 1000);
+      stepTimeElapsed += stepCheckInterval / 1000;
+      
+      if (stepTimeElapsed >= exercise.stepDurations[currentStep % exercise.steps.length]) {
+        // Move to next step
+        currentStep++;
+        setBreathingStep(currentStep % exercise.steps.length);
+        stepTimeElapsed = 0;
+      }
+    }, stepCheckInterval);
+    
+    // Calculate total duration for all cycles (3 full cycles at a slower pace)
+    const totalDuration = exercise.stepDurations.reduce((a, b) => a + b, 0) * 3;
     
     setTimeout(() => {
       if (breathingIntervalRef.current) {
@@ -254,7 +267,7 @@ const AIChat = () => {
       
       setMessages(prev => [...prev, completionMessage]);
       saveMessage(completionMessage);
-    }, exercise.duration * 1000 * 3);
+    }, totalDuration * 1000);
   };
 
   const stopBreathingExercise = () => {
@@ -339,7 +352,7 @@ const AIChat = () => {
                   <div className="flex justify-center my-4">
                     <div className="bg-mindshift-light rounded-2xl px-6 py-4 text-center">
                       <p className="font-medium text-mindshift-dark mb-2">{currentBreathingExercise.name}</p>
-                      <div className="text-2xl font-bold text-mindshift-raspberry">
+                      <div className="text-2xl font-bold text-mindshift-raspberry animate-pulse duration-1000">
                         {currentBreathingExercise.steps[breathingStep]}
                       </div>
                       <Button 
@@ -419,7 +432,7 @@ const AIChat = () => {
             {isBreathing && currentBreathingExercise && (
               <div className="mt-8 p-6 bg-mindshift-light rounded-xl text-center">
                 <h3 className="text-xl font-medium text-mindshift-dark mb-4">{currentBreathingExercise.name}</h3>
-                <div className="text-4xl font-bold text-mindshift-raspberry my-6 h-12">
+                <div className="text-4xl font-bold text-mindshift-raspberry my-6 h-12 animate-pulse duration-1000">
                   {currentBreathingExercise.steps[breathingStep]}
                 </div>
                 <Button 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -217,7 +218,7 @@ const MoodTracker = () => {
           </CardFooter>
         </Card>
       )}
-      <Card className="mindshift-card md:col-span-2">
+      <Card className="mindshift-card">
         <CardHeader>
           <CardTitle className="text-2xl text-mindshift-raspberry">Your Mood History</CardTitle>
           <CardDescription>View your mood trends over the past weeks</CardDescription>

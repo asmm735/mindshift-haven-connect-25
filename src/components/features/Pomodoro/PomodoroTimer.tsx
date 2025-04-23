@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type TimerMode = "focus" | "shortBreak" | "longBreak";
 
@@ -31,12 +31,15 @@ const defaultSettings: TimerSettings = {
 };
 
 const soundOptions: SoundOption[] = [
-  { id: "white-noise", name: "White Noise", src: "/sounds/white-noise.mp3" },
-  { id: "forest", name: "Forest Sounds", src: "/sounds/forest.mp3" },
-  { id: "rain", name: "Rain", src: "/sounds/rain.mp3" },
-  { id: "ocean", name: "Ocean Waves", src: "/sounds/ocean.mp3" },
-  { id: "gamma", name: "Gamma Waves", src: "/sounds/gamma.mp3" },
+  { id: "white-noise", name: "White Noise", src: "https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3" },
+  { id: "forest", name: "Forest Sounds", src: "https://assets.mixkit.co/active_storage/sfx/2532/2532-preview.mp3" },
+  { id: "rain", name: "Rain", src: "https://assets.mixkit.co/active_storage/sfx/149/149-preview.mp3" },
+  { id: "ocean", name: "Ocean Waves", src: "https://assets.mixkit.co/active_storage/sfx/151/151-preview.mp3" },
+  { id: "gamma", name: "Gamma Waves", src: "https://assets.mixkit.co/active_storage/sfx/209/209-preview.mp3" },
 ];
+
+// Create notification sound URL
+const notificationSoundUrl = "https://assets.mixkit.co/active_storage/sfx/254/254-preview.mp3";
 
 const PomodoroTimer = () => {
   const [settings, setSettings] = useState<TimerSettings>(defaultSettings);
@@ -49,17 +52,30 @@ const PomodoroTimer = () => {
   const [volume, setVolume] = useState(50);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const notificationRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
-  // Initialize audio element
+  // Initialize audio elements
   useEffect(() => {
     if (typeof Audio !== 'undefined') {
       audioRef.current = new Audio(selectedSound.src);
       audioRef.current.loop = true;
+      
+      notificationRef.current = new Audio(notificationSoundUrl);
+      notificationRef.current.volume = 0.7;
+      
+      // Preload audio files
+      audioRef.current.load();
+      notificationRef.current.load();
+      
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current = null;
+        }
+        
+        if (notificationRef.current) {
+          notificationRef.current = null;
         }
       };
     }
@@ -79,9 +95,10 @@ const PomodoroTimer = () => {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = new Audio(selectedSound.src);
+      audioRef.current.src = selectedSound.src;
       audioRef.current.loop = true;
       audioRef.current.volume = volume / 100;
+      audioRef.current.load();
       if (soundEnabled && isRunning) {
         audioRef.current.play().catch(e => console.log("Audio play failed:", e));
       }
@@ -148,8 +165,9 @@ const PomodoroTimer = () => {
     setIsRunning(false);
     
     // Play notification sound
-    const audio = new Audio('/notification.mp3');
-    audio.play().catch(e => console.log("Audio play failed:", e));
+    if (notificationRef.current) {
+      notificationRef.current.play().catch(e => console.log("Notification audio play failed:", e));
+    }
     
     if (currentMode === "focus") {
       const newFocusSessions = focusSessions + 1;
@@ -462,6 +480,22 @@ const PomodoroTimer = () => {
                   step={5}
                   onValueChange={(value) => handleSettingChange("longBreak", value)}
                 />
+              </div>
+              
+              {/* Test notification sound */}
+              <div className="pt-4 border-t border-gray-100">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (notificationRef.current) {
+                      notificationRef.current.play().catch(e => console.log("Test notification failed:", e));
+                    }
+                  }}
+                  className="w-full"
+                >
+                  Test Notification Sound
+                </Button>
               </div>
             </div>
           </TabsContent>

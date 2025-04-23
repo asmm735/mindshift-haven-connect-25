@@ -4,16 +4,16 @@ import HeroSection from "@/components/home/HeroSection";
 import FeatureSection from "@/components/home/FeatureSection";
 import TestimonialSection from "@/components/home/TestimonialSection";
 import CallToAction from "@/components/home/CallToAction";
+import ReviewsSection from "@/components/features/Reviews/ReviewsSection";
 
 const Index = () => {
   return (
     <PageLayout>
-      <div className="flex flex-col w-full">
-        <HeroSection />
-        <FeatureSection />
-        <TestimonialSection />
-        <CallToAction />
-      </div>
+      <HeroSection />
+      <FeatureSection />
+      <ReviewsSection />
+      <TestimonialSection />
+      <CallToAction />
     </PageLayout>
   );
 };
