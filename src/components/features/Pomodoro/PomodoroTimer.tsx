@@ -4,9 +4,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Timer } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Play, Pause, Timer, Volume2, Volume1, VolumeX, Music } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type TimerMode = "focus" | "shortBreak" | "longBreak";
 
@@ -16,11 +19,25 @@ interface TimerSettings {
   longBreak: number;
 }
 
+interface SoundOption {
+  id: string;
+  name: string;
+  src: string;
+}
+
 const defaultSettings: TimerSettings = {
   focus: 25,
   shortBreak: 5,
   longBreak: 15,
 };
+
+const soundOptions: SoundOption[] = [
+  { id: "white-noise", name: "White Noise", src: "/sounds/white-noise.mp3" },
+  { id: "forest", name: "Forest Sounds", src: "/sounds/forest.mp3" },
+  { id: "rain", name: "Rain", src: "/sounds/rain.mp3" },
+  { id: "ocean", name: "Ocean Waves", src: "/sounds/ocean.mp3" },
+  { id: "gamma", name: "Gamma Waves", src: "/sounds/gamma.mp3" },
+];
 
 const PomodoroTimer = () => {
   const [settings, setSettings] = useState<TimerSettings>(defaultSettings);
@@ -28,8 +45,26 @@ const PomodoroTimer = () => {
   const [timeRemaining, setTimeRemaining] = useState(settings.focus * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [focusSessions, setFocusSessions] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [selectedSound, setSelectedSound] = useState<SoundOption>(soundOptions[0]);
+  const [volume, setVolume] = useState(50);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+
+  // Initialize audio element
+  useEffect(() => {
+    if (typeof Audio !== 'undefined') {
+      audioRef.current = new Audio(selectedSound.src);
+      audioRef.current.loop = true;
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+      };
+    }
+  }, []);
 
   // Update time remaining when mode or settings change
   useEffect(() => {
@@ -40,6 +75,37 @@ const PomodoroTimer = () => {
       timerRef.current = null;
     }
   }, [currentMode, settings]);
+
+  // Handle sound selection
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = new Audio(selectedSound.src);
+      audioRef.current.loop = true;
+      audioRef.current.volume = volume / 100;
+      if (soundEnabled && isRunning) {
+        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+      }
+    }
+  }, [selectedSound]);
+
+  // Handle volume change
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+
+  // Handle sound toggle
+  useEffect(() => {
+    if (audioRef.current) {
+      if (soundEnabled && isRunning) {
+        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [soundEnabled, isRunning]);
 
   // Timer logic
   useEffect(() => {
@@ -54,9 +120,21 @@ const PomodoroTimer = () => {
           return prev - 1;
         });
       }, 1000);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+
+      // Start sound if enabled
+      if (soundEnabled && audioRef.current) {
+        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+      }
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      // Pause sound if timer is not running
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
     }
 
     return () => {
@@ -124,6 +202,17 @@ const PomodoroTimer = () => {
     });
   };
 
+  const handleSoundToggle = (checked: boolean) => {
+    setSoundEnabled(checked);
+  };
+
+  const handleSoundSelection = (soundId: string) => {
+    const sound = soundOptions.find(s => s.id === soundId);
+    if (sound) {
+      setSelectedSound(sound);
+    }
+  };
+
   return (
     <Card className="mindshift-card max-w-md mx-auto">
       <CardHeader>
@@ -138,8 +227,9 @@ const PomodoroTimer = () => {
       
       <CardContent className="space-y-6">
         <Tabs defaultValue="timer" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="timer">Timer</TabsTrigger>
+            <TabsTrigger value="sounds">Sound Therapy</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           
@@ -228,6 +318,114 @@ const PomodoroTimer = () => {
               
               <div className="mt-4 text-sm text-gray-600">
                 Session count: {focusSessions}
+              </div>
+
+              {/* Sound Quick Toggle */}
+              <div className="flex items-center justify-center space-x-2 mt-4 pt-2 border-t border-gray-100">
+                <Label htmlFor="sound-toggle" className="text-sm text-gray-600">Background Sound</Label>
+                <Switch 
+                  id="sound-toggle" 
+                  checked={soundEnabled}
+                  onCheckedChange={handleSoundToggle}
+                />
+                {soundEnabled && (
+                  <div className="flex items-center gap-2">
+                    <VolumeX 
+                      className={`h-4 w-4 cursor-pointer ${volume === 0 ? 'text-mindshift-raspberry' : 'text-gray-400'}`}
+                      onClick={() => setVolume(0)}
+                    />
+                    <Slider
+                      value={[volume]}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-20"
+                      onValueChange={(value) => setVolume(value[0])}
+                    />
+                    <Volume2 
+                      className={`h-4 w-4 cursor-pointer ${volume > 50 ? 'text-mindshift-raspberry' : 'text-gray-400'}`}
+                      onClick={() => setVolume(100)}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="sounds" className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h4 className="font-medium text-sm">Sound Therapy</h4>
+                  <p className="text-xs text-gray-500">Play calming sounds during your focus sessions</p>
+                </div>
+                <Switch 
+                  id="sound-toggle-main" 
+                  checked={soundEnabled}
+                  onCheckedChange={handleSoundToggle}
+                />
+              </div>
+
+              <div className={`space-y-4 ${!soundEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Sound</label>
+                  <RadioGroup 
+                    value={selectedSound.id} 
+                    onValueChange={handleSoundSelection}
+                    className="grid grid-cols-1 gap-2"
+                  >
+                    {soundOptions.map((sound) => (
+                      <div key={sound.id} className="flex items-center space-x-2 border rounded-md p-3">
+                        <RadioGroupItem value={sound.id} id={sound.id} />
+                        <Label htmlFor={sound.id} className="flex-1">{sound.name}</Label>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            // Preview sound
+                            const audio = new Audio(sound.src);
+                            audio.volume = volume / 100;
+                            audio.play().catch(e => console.log("Audio preview failed:", e));
+                            setTimeout(() => audio.pause(), 3000); // Play for 3 seconds
+                          }}
+                        >
+                          <Play className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Volume: {volume}%</label>
+                    <div className="flex items-center gap-2">
+                      <VolumeX 
+                        className="h-4 w-4 cursor-pointer" 
+                        onClick={() => setVolume(0)}
+                      />
+                      <Volume2 
+                        className="h-4 w-4 cursor-pointer" 
+                        onClick={() => setVolume(100)}
+                      />
+                    </div>
+                  </div>
+                  <Slider
+                    value={[volume]}
+                    min={0}
+                    max={100}
+                    step={1}
+                    onValueChange={(value) => setVolume(value[0])}
+                  />
+                </div>
+                
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    Sound will play automatically when the timer is running. You can 
+                    toggle sounds quickly from the timer screen.
+                  </p>
+                </div>
               </div>
             </div>
           </TabsContent>
