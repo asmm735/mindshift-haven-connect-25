@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -187,84 +186,111 @@ const AIChat = () => {
     setInput("");
     setIsTyping(true);
 
-    const potentialMentalHealthIssue = detectAnxietyOrDepression(input.trim());
+    // Therapist prompt context for improved empathy
+    const SYSTEM_PROMPT =
+      "You are a compassionate, insightful online therapist chatbot. Each response should be empathic, supportive, and guide the user gently to reflect or try grounding exercises, but do not give direct clinical advice. If the user asks about breathing or calming exercises, suggest a simple, slow-paced technique, and always encourage them at the end.";
 
-    setTimeout(() => {
-      let aiResponse: string;
-      
-      if (potentialMentalHealthIssue) {
-        aiResponse = getEmpathicResponse();
-      } else if (input.toLowerCase().includes("breathing") || input.toLowerCase().includes("exercise")) {
-        aiResponse = "Would you like to try a breathing exercise? I can guide you through box breathing, 4-7-8 breathing, or deep breathing.";
-      } else {
-        const randomIndex = Math.floor(Math.random() * aiResponses.length);
-        aiResponse = aiResponses[randomIndex];
-      }
+    const apiKey = "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";
+    let aiResponse = "";
 
-      const aiMessage: Message = {
-        id: messages.length + 2,
-        type: "ai",
-        text: aiResponse,
-        timestamp: new Date()
-      };
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...messages.map(m => ({
+              role: m.type === "user" ? "user" : "assistant",
+              content: m.text
+            })),
+            { role: "user", content: input.trim() }
+          ],
+          temperature: 0.7,
+          max_tokens: 120
+        })
+      });
+      const data = await res.json();
+      aiResponse =
+        data?.choices?.[0]?.message?.content?.trim() ||
+        "Sorry, I'm unable to respond right now.";
+    } catch (e) {
+      aiResponse =
+        "Sorry, I couldn't connect to the AI service. Please try again later.";
+    }
 
-      setMessages(prev => [...prev, aiMessage]);
-      saveMessage(aiMessage);
-      setIsTyping(false);
-    }, 1500);
+    const aiMessage: Message = {
+      id: messages.length + 2,
+      type: "ai",
+      text: aiResponse,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, aiMessage]);
+    saveMessage(aiMessage);
+    setIsTyping(false);
   };
 
+  // Breathing: Make pace slower (more relaxing per user request)
   const startBreathingExercise = (exerciseIndex: number) => {
     if (isBreathing) return;
-    
+
     const exercise = breathingExercises[exerciseIndex];
     setCurrentBreathingExercise(exercise);
     setBreathingStep(0);
     setIsBreathing(true);
-    
+
     let currentStep = 0;
     let stepTimeElapsed = 0;
-    const stepCheckInterval = 500; // Check every 500ms for smoother transitions
-    
+    const stepCheckInterval = 500; // Check every 500ms
+
+    // Pace multiplier (slow everything down: base is 1, 2 is twice as slow)
+    const pacingMultiplier = 2.2; // 2.2x slower than before
+
     const aiMessage: Message = {
       id: messages.length + 1,
       type: "ai",
-      text: `Let's begin the ${exercise.name}. ${exercise.instructions}`,
+      text: `Let's begin the ${exercise.name}. ${exercise.instructions} We'll move through each step calmly—just follow along.`,
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, aiMessage]);
     saveMessage(aiMessage);
-    
-    // Use a more frequent interval check for smoother transitions but respect the duration
+
     breathingIntervalRef.current = setInterval(() => {
       stepTimeElapsed += stepCheckInterval / 1000;
-      
-      if (stepTimeElapsed >= exercise.stepDurations[currentStep % exercise.steps.length]) {
-        // Move to next step
+      if (
+        stepTimeElapsed >=
+        exercise.stepDurations[currentStep % exercise.steps.length] * pacingMultiplier
+      ) {
         currentStep++;
         setBreathingStep(currentStep % exercise.steps.length);
         stepTimeElapsed = 0;
       }
     }, stepCheckInterval);
-    
-    // Calculate total duration for all cycles (3 full cycles at a slower pace)
-    const totalDuration = exercise.stepDurations.reduce((a, b) => a + b, 0) * 3;
-    
+
+    // Calculate slower total duration: 3 relaxed cycles
+    const totalDuration =
+      exercise.stepDurations.reduce((a, b) => a + b, 0) * pacingMultiplier * 3;
+
     setTimeout(() => {
       if (breathingIntervalRef.current) {
         clearInterval(breathingIntervalRef.current);
         breathingIntervalRef.current = null;
       }
       setIsBreathing(false);
-      
+
       const completionMessage: Message = {
         id: messages.length + 2,
         type: "ai",
-        text: "Great job with the breathing exercise! How do you feel now?",
+        text: "Wonderful. You've finished the exercise. Notice how you feel—well done for taking this step for your wellbeing.",
         timestamp: new Date()
       };
-      
+
       setMessages(prev => [...prev, completionMessage]);
       saveMessage(completionMessage);
     }, totalDuration * 1000);

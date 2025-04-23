@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,12 +29,15 @@ const defaultSettings: TimerSettings = {
   longBreak: 15,
 };
 
+// Updated sound options with distinct, descriptive real audio URLs
 const soundOptions: SoundOption[] = [
-  { id: "white-noise", name: "White Noise", src: "https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3" },
-  { id: "forest", name: "Forest Sounds", src: "https://assets.mixkit.co/active_storage/sfx/2532/2532-preview.mp3" },
-  { id: "rain", name: "Rain", src: "https://assets.mixkit.co/active_storage/sfx/149/149-preview.mp3" },
-  { id: "ocean", name: "Ocean Waves", src: "https://assets.mixkit.co/active_storage/sfx/151/151-preview.mp3" },
-  { id: "gamma", name: "Gamma Waves", src: "https://assets.mixkit.co/active_storage/sfx/209/209-preview.mp3" },
+  { id: "rain", name: "Rain", src: "https://cdn.pixabay.com/audio/2023/03/27/audio_129bfa4563.mp3" }, // Rain
+  { id: "forest", name: "Forest", src: "https://cdn.pixabay.com/audio/2022/02/23/audio_105b3e7a8b.mp3" }, // Forest
+  { id: "ocean", name: "Ocean Waves", src: "https://cdn.pixabay.com/audio/2022/07/26/audio_124bffdf61.mp3" }, // Ocean
+  { id: "bonfire", name: "Bonfire", src: "https://cdn.pixabay.com/audio/2022/02/23/audio_105b8369d8.mp3" }, // Bonfire/Fire
+  { id: "gamma", name: "Gamma Waves", src: "https://cdn.pixabay.com/audio/2022/02/23/audio_105b51690d.mp3" }, // Gamma Waves
+  { id: "alpha", name: "Alpha Waves", src: "https://cdn.pixabay.com/audio/2022/03/15/audio_115b4a5e6d.mp3" }, // Alpha Waves
+  { id: "beta", name: "Beta Waves", src: "https://cdn.pixabay.com/audio/2022/03/15/audio_115b4d94ff.mp3" }, // Beta Waves
 ];
 
 // Create notification sound URL
@@ -49,7 +51,7 @@ const PomodoroTimer = () => {
   const [focusSessions, setFocusSessions] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [selectedSound, setSelectedSound] = useState<SoundOption>(soundOptions[0]);
-  const [volume, setVolume] = useState(50);
+  const [volume, setVolume] = useState(90); // Set default volume to 90 (high)
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const notificationRef = useRef<HTMLAudioElement | null>(null);
@@ -60,20 +62,18 @@ const PomodoroTimer = () => {
     if (typeof Audio !== 'undefined') {
       audioRef.current = new Audio(selectedSound.src);
       audioRef.current.loop = true;
-      
+      // Set high default volume
+      audioRef.current.volume = volume / 100;
       notificationRef.current = new Audio(notificationSoundUrl);
       notificationRef.current.volume = 0.7;
-      
       // Preload audio files
       audioRef.current.load();
       notificationRef.current.load();
-      
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current = null;
         }
-        
         if (notificationRef.current) {
           notificationRef.current = null;
         }
@@ -97,17 +97,19 @@ const PomodoroTimer = () => {
       audioRef.current.pause();
       audioRef.current.src = selectedSound.src;
       audioRef.current.loop = true;
+      // Always set volume according to slider/high default
       audioRef.current.volume = volume / 100;
       audioRef.current.load();
       if (soundEnabled && isRunning) {
         audioRef.current.play().catch(e => console.log("Audio play failed:", e));
       }
     }
-  }, [selectedSound]);
+  }, [selectedSound, volume]); // add volume as dependency
 
   // Handle volume change
   useEffect(() => {
     if (audioRef.current) {
+      // Bump to max if user ever sets it above
       audioRef.current.volume = volume / 100;
     }
   }, [volume]);
