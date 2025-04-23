@@ -9,7 +9,7 @@ interface Therapist {
   id: number;
   name: string;
   title: string;
-  specialty: string;
+  specialty: string | undefined | null;
   rating: number;
   reviewCount: number;
   image: string;
@@ -24,7 +24,8 @@ interface TherapistCardProps {
 }
 
 const TherapistCard = ({ therapist }: TherapistCardProps) => {
-  const specialties = therapist.specialty.split(", ");
+  // Safely handle specialty which might be undefined or null
+  const specialties = therapist.specialty ? therapist.specialty.split(", ") : [];
 
   return (
     <Card className="mindshift-card overflow-hidden">
