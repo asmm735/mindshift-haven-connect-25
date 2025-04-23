@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import TheraConnectMap from "./TheraConnectMap";
 import { MapPin, Check } from "lucide-react";
 
 type Therapist = {
@@ -31,7 +30,7 @@ const TheraConnect = () => {
       .select("*")
       .in("city", ["Mumbai", "Navi Mumbai"])
       .eq("verified", true);
-      
+
     if (!error && data) {
       setTherapists(data);
       setFilteredTherapists(data);
@@ -97,15 +96,9 @@ const TheraConnect = () => {
               </div>
             </div>
             <Separator className="my-4" />
-            <TheraConnectMap therapists={filteredTherapists
-              .filter(t => (t.latitude && t.longitude))
-              .map(t => ({
-                ...t,
-                latitude: t.latitude ?? 0,
-                longitude: t.longitude ?? 0,
-                verified: t.verified ?? false,
-              }))}
-            />
+            <p className="text-xs text-gray-400">
+              Online map feature is disabled. Browse verified therapists below.
+            </p>
           </CardContent>
         </Card>
       </div>

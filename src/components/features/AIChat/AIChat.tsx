@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-// Enhanced AI responses with more emotionally intelligent content
 const aiResponses = [
   "I hear you're going through a difficult time. How long have you been feeling this way?",
   "That sounds really challenging. Would it help to explore what might be triggering these feelings?",
@@ -24,7 +22,6 @@ const aiResponses = [
   "Thank you for trusting me with this. Would you like to explore some resources that might help with what you're experiencing?"
 ];
 
-// Breathing exercise instructions
 const breathingExercises = [
   {
     name: "Box Breathing",
@@ -49,7 +46,6 @@ const breathingExercises = [
   }
 ];
 
-// Types for messages
 type MessageType = "user" | "ai";
 
 interface Message {
@@ -85,7 +81,6 @@ const AIChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Load chat history from Supabase when component mounts
   useEffect(() => {
     const loadChatHistory = async () => {
       try {
@@ -100,8 +95,14 @@ const AIChat = () => {
           if (error) throw error;
           
           if (data && data.length > 0) {
-            const loadedMessages = data.map(msg => ({
-              id: msg.id,
+            const loadedMessages: Message[] = data.map((msg) => ({
+              id: Number(
+                typeof msg.id === "number"
+                  ? msg.id
+                  : typeof msg.id === "string"
+                  ? parseInt(msg.id.slice(-6), 16) || Math.floor(Math.random() * 100000)
+                  : Math.floor(Math.random() * 100000)
+              ),
               type: msg.type as MessageType,
               text: msg.content,
               timestamp: new Date(msg.timestamp)
@@ -117,7 +118,6 @@ const AIChat = () => {
     loadChatHistory();
   }, []);
 
-  // Save message to Supabase
   const saveMessage = async (message: Message) => {
     try {
       const { data: session } = await supabase.auth.getSession();
@@ -174,7 +174,6 @@ const AIChat = () => {
   const handleSendMessage = async () => {
     if (input.trim() === "" || isTyping) return;
 
-    // Add user message
     const userMessage: Message = {
       id: messages.length + 1,
       type: "user",
@@ -183,14 +182,12 @@ const AIChat = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    saveMessage(userMessage); // Save user message to Supabase
+    saveMessage(userMessage);
     setInput("");
     setIsTyping(true);
 
-    // Check for anxiety or depression indicators
     const potentialMentalHealthIssue = detectAnxietyOrDepression(input.trim());
 
-    // Simulate AI response after a delay
     setTimeout(() => {
       let aiResponse: string;
       
@@ -211,7 +208,7 @@ const AIChat = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      saveMessage(aiMessage); // Save AI message to Supabase
+      saveMessage(aiMessage);
       setIsTyping(false);
     }, 1500);
   };
@@ -226,7 +223,6 @@ const AIChat = () => {
     
     let currentStep = 0;
     
-    // Add a message about starting the exercise
     const aiMessage: Message = {
       id: messages.length + 1,
       type: "ai",
@@ -242,7 +238,6 @@ const AIChat = () => {
       currentStep++;
     }, 1000);
     
-    // Stop after a few cycles (e.g., 3 cycles)
     setTimeout(() => {
       if (breathingIntervalRef.current) {
         clearInterval(breathingIntervalRef.current);
@@ -250,7 +245,6 @@ const AIChat = () => {
       }
       setIsBreathing(false);
       
-      // Add a message about completing the exercise
       const completionMessage: Message = {
         id: messages.length + 2,
         type: "ai",
@@ -260,8 +254,7 @@ const AIChat = () => {
       
       setMessages(prev => [...prev, completionMessage]);
       saveMessage(completionMessage);
-      
-    }, exercise.duration * 1000 * 3); // 3 cycles
+    }, exercise.duration * 1000 * 3);
   };
 
   const stopBreathingExercise = () => {
@@ -271,7 +264,6 @@ const AIChat = () => {
     }
     setIsBreathing(false);
     
-    // Add a message about stopping the exercise
     const aiMessage: Message = {
       id: messages.length + 1,
       type: "ai",
