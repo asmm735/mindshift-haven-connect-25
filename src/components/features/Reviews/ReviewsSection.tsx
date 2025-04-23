@@ -21,6 +21,7 @@ const ReviewsSection = () => {
   const [rating, setRating] = useState<number>(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [canPost, setCanPost] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchReviews = async () => {
@@ -33,17 +34,33 @@ const ReviewsSection = () => {
 
   useEffect(() => {
     fetchReviews();
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setCanPost(true);
+        setUserId(session.user.id);
+      } else {
+        setCanPost(false);
+        setUserId(null);
+      }
+    };
+    
+    checkUser();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setCanPost(!!session?.user);
+      setUserId(session?.user?.id || null);
     });
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setCanPost(!!session?.user);
-    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content || !rating) {
+    if (!content || !rating || !userId) {
       toast({ title: "Please fill all fields", variant: "destructive" });
       return;
     }
@@ -51,7 +68,7 @@ const ReviewsSection = () => {
     const { error } = await supabase.from("reviews").insert({
       content,
       rating,
-      // user_id set by RLS
+      user_id: userId
     });
     setIsSubmitting(false);
     if (error) {

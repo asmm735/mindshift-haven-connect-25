@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,13 +29,45 @@ const MoodTracker = () => {
   const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Determine if user submitted for today
   const todayISO = format(new Date(), "yyyy-MM-dd");
   const hasToday = moodHistory.some(entry => entry.entry_date === todayISO);
 
-  const fetchMoodHistory = async () => {
+  useEffect(() => {
+    // Get the current user
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+        fetchMoodHistory(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    };
+    
+    checkUser();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUserId(session.user.id);
+        fetchMoodHistory(session.user.id);
+      } else {
+        setUserId(null);
+        setMoodHistory([]);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchMoodHistory = async (userId: string) => {
     setLoading(true);
     const { data, error } = await supabase
       .from("mood_entries")
@@ -52,11 +83,6 @@ const MoodTracker = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchMoodHistory();
-    // Real-time update optionally (would need supabase channel), omitted for brevity
-  }, []);
-
   const handleMoodSelect = (value: string) => setSelectedMood(value);
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value);
@@ -66,12 +92,18 @@ const MoodTracker = () => {
       toast({ title: "Please select a mood", variant: "destructive" });
       return;
     }
+    
+    if (!userId) {
+      toast({ title: "You must be signed in to log your mood", variant: "destructive" });
+      return;
+    }
+    
     setIsSubmitting(true);
     const { error } = await supabase.from('mood_entries').insert({
       mood: parseInt(selectedMood),
       notes,
       entry_date: todayISO,
-      // user_id populated by RLS/auth
+      user_id: userId
     });
     setIsSubmitting(false);
 
@@ -81,7 +113,7 @@ const MoodTracker = () => {
       toast({ title: "Mood logged successfully", description: "Your mood has been recorded for today." });
       setSelectedMood("");
       setNotes("");
-      fetchMoodHistory();
+      fetchMoodHistory(userId);
     }
   };
 
@@ -95,7 +127,7 @@ const MoodTracker = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-      {!loading && !hasToday && (
+      {!loading && !hasToday && userId && (
         <Card className="mindshift-card">
           <CardHeader>
             <CardTitle className="text-2xl text-mindshift-raspberry">How are you feeling today?</CardTitle>
@@ -150,6 +182,8 @@ const MoodTracker = () => {
         <CardContent className="h-80">
           {loading ? (
             <div className="flex items-center justify-center h-full">Loading...</div>
+          ) : !userId ? (
+            <div className="text-center text-gray-500 my-14">Please sign in to see your mood history.</div>
           ) : chartData.length === 0 ? (
             <div className="text-center text-gray-500 my-14">No mood entries yet.</div>
           ) : (
