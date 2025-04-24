@@ -51,7 +51,7 @@ export const typedTables = {
   sound_therapy_tracks: {} as {
     id: string;
     title: string;
-    audio_file: Uint8Array | null;
+    audio_file: Uint8Array | string | null;
     category: string;
     description: string | null;
     duration: number | null;

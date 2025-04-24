@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,7 @@ interface SoundOption {
   title: string;
   category: string;
   audio_url?: string; 
-  audio_file?: Uint8Array;
+  audio_file?: Uint8Array | string | null;
 }
 
 const defaultSettings: TimerSettings = {
@@ -86,7 +85,7 @@ const PomodoroTimer = () => {
           title: track.title,
           category: track.category,
           audio_url: audioUrl,
-          // Store the original audio file data as is
+          // Keep the original audio_file as is, the type now accepts string
           audio_file: track.audio_file
         } as SoundOption;
       });
