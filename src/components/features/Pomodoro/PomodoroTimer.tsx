@@ -62,19 +62,12 @@ const PomodoroTimer = () => {
         
         if (track.audio_file) {
           try {
-            if (track.audio_file instanceof Uint8Array) {
-              audioFile = track.audio_file;
-            } 
-            else if (typeof track.audio_file === 'string') {
-              const binary = atob(track.audio_file);
-              audioFile = new Uint8Array(binary.length);
-              for (let i = 0; i < binary.length; i++) {
-                audioFile[i] = binary.charCodeAt(i);
-              }
-            }
-            
-            if (audioFile) {
-              const blob = new Blob([audioFile], { type: 'audio/mpeg' });
+            const processedAudioFile = typeof track.audio_file === 'string' 
+              ? Uint8Array.from(atob(track.audio_file), c => c.charCodeAt(0))
+              : track.audio_file;
+
+            if (processedAudioFile) {
+              const blob = new Blob([processedAudioFile], { type: 'audio/mpeg' });
               audioUrl = URL.createObjectURL(blob);
             }
           } catch (e) {
@@ -87,7 +80,7 @@ const PomodoroTimer = () => {
           title: track.title,
           category: track.category,
           audio_url: audioUrl,
-          audio_file: audioFile
+          audio_file: track.audio_file ? new Uint8Array(track.audio_file) : undefined
         } as SoundOption;
       });
     }
