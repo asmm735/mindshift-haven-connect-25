@@ -56,35 +56,7 @@ const PomodoroTimer = () => {
         .select('*');
       
       if (error) throw error;
-
-      return data.map(track => {
-        let audioUrl: string | undefined;
-        
-        if (track.audio_file) {
-          try {
-            let audioArray: Uint8Array;
-            
-            if (typeof track.audio_file === 'string') {
-              audioArray = Uint8Array.from(atob(track.audio_file), c => c.charCodeAt(0));
-            } else {
-              audioArray = new Uint8Array(track.audio_file);
-            }
-            
-            const blob = new Blob([audioArray], { type: 'audio/mpeg' });
-            audioUrl = URL.createObjectURL(blob);
-          } catch (e) {
-            console.error('Error processing audio file:', e);
-          }
-        }
-        
-        return {
-          id: track.id,
-          title: track.title,
-          category: track.category,
-          audio_url: audioUrl,
-          audio_file: track.audio_file
-        } as SoundOption;
-      });
+      return data;
     }
   });
 
@@ -248,7 +220,7 @@ const PomodoroTimer = () => {
 
     return (
       <SoundSelector
-        sounds={soundOptions}
+        sounds={soundOptionsData}
         selectedSound={selectedSound}
         onSelectSound={setSelectedSound}
         volume={volume}

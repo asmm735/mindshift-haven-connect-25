@@ -9,8 +9,8 @@ interface SoundOption {
   id: string;
   title: string;
   category: string;
-  audio_url?: string;
-  audio_file?: Uint8Array | string | null;
+  audio_url: string;
+  description?: string | null;
 }
 
 interface SoundSelectorProps {
@@ -31,18 +31,16 @@ const SoundSelector = ({ sounds, selectedSound, onSelectSound, volume, isPlaying
       return;
     }
 
-    if (sound.audio_url) {
-      const audio = new Audio(sound.audio_url);
-      audio.volume = volume / 100;
-      audio.play().catch(console.error);
-      setPreviewAudio(audio);
-      
-      // Stop preview after 3 seconds
-      setTimeout(() => {
-        audio.pause();
-        setPreviewAudio(null);
-      }, 3000);
-    }
+    const audio = new Audio(sound.audio_url);
+    audio.volume = volume / 100;
+    audio.play().catch(console.error);
+    setPreviewAudio(audio);
+    
+    // Stop preview after 3 seconds
+    setTimeout(() => {
+      audio.pause();
+      setPreviewAudio(null);
+    }, 3000);
   };
 
   return (
@@ -57,7 +55,12 @@ const SoundSelector = ({ sounds, selectedSound, onSelectSound, volume, isPlaying
       {sounds.map((sound) => (
         <div key={sound.id} className="flex items-center space-x-2 border rounded-md p-3">
           <RadioGroupItem value={sound.id} id={sound.id} />
-          <Label htmlFor={sound.id} className="flex-1">{sound.title}</Label>
+          <Label htmlFor={sound.id} className="flex-1">
+            <div className="flex flex-col">
+              <span className="font-medium">{sound.title}</span>
+              {sound.description && <span className="text-xs text-gray-500">{sound.description}</span>}
+            </div>
+          </Label>
           <Button 
             variant="ghost" 
             size="sm" 
