@@ -1,4 +1,3 @@
-
 // Update the Therapist type to include new fields
 export type Therapist = {
   id: string;
@@ -51,7 +50,7 @@ export const typedTables = {
   sound_therapy_tracks: {} as {
     id: string;
     title: string;
-    audio_url: string;
+    audio_file: Uint8Array;
     category: string;
     description: string | null;
     duration: number | null;

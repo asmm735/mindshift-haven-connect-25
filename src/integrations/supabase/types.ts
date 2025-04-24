@@ -89,7 +89,7 @@ export type Database = {
       }
       sound_therapy_tracks: {
         Row: {
-          audio_url: string
+          audio_file: string | null
           category: string
           created_at: string | null
           description: string | null
@@ -98,7 +98,7 @@ export type Database = {
           title: string
         }
         Insert: {
-          audio_url: string
+          audio_file?: string | null
           category: string
           created_at?: string | null
           description?: string | null
@@ -107,7 +107,7 @@ export type Database = {
           title: string
         }
         Update: {
-          audio_url?: string
+          audio_file?: string | null
           category?: string
           created_at?: string | null
           description?: string | null

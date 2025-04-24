@@ -1,6 +1,5 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Phone, Mail, Check } from "lucide-react";
 import { Therapist } from "@/types/supabase-custom";
@@ -51,17 +50,6 @@ const TherapistCard = ({ therapist }: TherapistCardProps) => {
             Verified Professional
           </div>
         )}
-
-        <div className="flex space-x-2">
-          <Button size="sm" variant="outline">
-            View Profile
-          </Button>
-          {therapist.phone_number && (
-            <Button size="sm" className="bg-mindshift-raspberry text-white">
-              Book Consultation
-            </Button>
-          )}
-        </div>
       </CardContent>
     </Card>
   );
