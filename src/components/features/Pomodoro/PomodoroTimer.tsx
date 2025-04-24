@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,19 +58,24 @@ const PomodoroTimer = () => {
       if (error) throw error;
 
       return data.map(track => {
-        let audioFile: Uint8Array | undefined;
         let audioUrl: string | undefined;
         
         if (track.audio_file) {
           try {
-            const processedAudioFile = typeof track.audio_file === 'string' 
-              ? Uint8Array.from(atob(track.audio_file), c => c.charCodeAt(0))
-              : track.audio_file;
-
-            if (processedAudioFile) {
-              const blob = new Blob([processedAudioFile], { type: 'audio/mpeg' });
-              audioUrl = URL.createObjectURL(blob);
+            // Fix: Handle binary data properly
+            let audioArray: Uint8Array;
+            
+            if (typeof track.audio_file === 'string') {
+              // Convert base64 string to Uint8Array
+              audioArray = Uint8Array.from(atob(track.audio_file), c => c.charCodeAt(0));
+            } else {
+              // Handle if it's already a binary format
+              audioArray = new Uint8Array(track.audio_file);
             }
+            
+            // Create a blob from the Uint8Array and generate URL
+            const blob = new Blob([audioArray], { type: 'audio/mpeg' });
+            audioUrl = URL.createObjectURL(blob);
           } catch (e) {
             console.error('Error processing audio file:', e);
           }
@@ -80,7 +86,8 @@ const PomodoroTimer = () => {
           title: track.title,
           category: track.category,
           audio_url: audioUrl,
-          audio_file: track.audio_file ? new Uint8Array(track.audio_file) : undefined
+          // Store the original audio file data as is
+          audio_file: track.audio_file
         } as SoundOption;
       });
     }
