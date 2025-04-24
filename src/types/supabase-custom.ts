@@ -50,10 +50,11 @@ export type SoundTherapyTrack = {
 };
 
 // Helper functions to provide type information for tables
-export const typedFrom = {
-  chat_messages: () => 'chat_messages',
-  mood_entries: () => 'mood_entries',
-  reviews: () => 'reviews',
-  therapists: () => 'therapists',
-  sound_therapy_tracks: () => 'sound_therapy_tracks',
+export const typedTables = {
+  chat_messages: 'chat_messages' as const, 
+  mood_entries: 'mood_entries' as const,
+  reviews: 'reviews' as const,
+  therapists: 'therapists' as const,
+  sound_therapy_tracks: 'sound_therapy_tracks' as const,
 };
+
