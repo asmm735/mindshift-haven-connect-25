@@ -1,3 +1,4 @@
+
 // Update the Therapist type to include new fields
 export type Therapist = {
   id: string;

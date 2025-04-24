@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,8 +21,8 @@ interface SoundOption {
   id: string;
   title: string;
   category: string;
-  audio_url?: string; // Make this optional 
-  audio_file?: Uint8Array; // Add this new field
+  audio_url?: string; 
+  audio_file?: Uint8Array;
 }
 
 const defaultSettings: TimerSettings = {
@@ -44,7 +43,6 @@ const PomodoroTimer = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const notificationRef = useRef<HTMLAudioElement | null>(null);
 
-  // Fetch sounds from Supabase
   const { 
     data: soundOptionsData = [], 
     isLoading: soundsLoading, 
@@ -58,28 +56,24 @@ const PomodoroTimer = () => {
       
       if (error) throw error;
       
-      // Transform the data to match our SoundOption interface
       return data.map(track => ({
         id: track.id,
         title: track.title,
         category: track.category,
-        // Create a temporary URL for the audio file
         audio_url: track.audio_file ? URL.createObjectURL(
           new Blob([track.audio_file], { type: 'audio/mpeg' })
         ) : undefined,
-        audio_file: track.audio_file
-      }));
+        audio_file: track.audio_file ? new Uint8Array(track.audio_file) : undefined
+      } as SoundOption));
     }
   });
 
-  // Create derived state to ensure we have audio_url for each sound
   const soundOptions = soundOptionsData.filter(sound => sound.audio_url);
 
   const [selectedSound, setSelectedSound] = useState<SoundOption | null>(
     soundOptions.length > 0 ? soundOptions[0] : null
   );
 
-  // Update selected sound when sounds are loaded
   useEffect(() => {
     if (soundOptions.length > 0 && !selectedSound) {
       setSelectedSound(soundOptions[0]);
@@ -122,7 +116,6 @@ const PomodoroTimer = () => {
 
   const handleTimerComplete = () => {
     setIsRunning(false);
-    // Play notification sound
     if (notificationRef.current) {
       notificationRef.current.currentTime = 0;
       notificationRef.current.play().catch(() => {});
@@ -167,7 +160,6 @@ const PomodoroTimer = () => {
     if (sound) setSelectedSound(sound);
   };
 
-  // Helper to play sound preview
   const previewAudio = (sound: SoundOption) => {
     if (!sound.audio_url) return;
     const audio = new Audio(sound.audio_url);
@@ -225,7 +217,6 @@ const PomodoroTimer = () => {
     }
   }, [soundEnabled, isRunning, selectedSound]);
 
-  // Modify the sound selection UI to use RadioGroup with new sounds
   const renderSoundSelection = () => {
     if (soundsLoading) {
       return <Loader2 className="h-6 w-6 animate-spin text-mindshift-raspberry" />;
@@ -331,7 +322,6 @@ const PomodoroTimer = () => {
               <div className="mt-4 text-sm text-gray-600">
                 Session count: {focusSessions}
               </div>
-              {/* Sound Quick Toggle */}
               <div className="flex items-center justify-center space-x-2 mt-4 pt-2 border-t border-gray-100">
                 <Label htmlFor="sound-toggle" className="text-sm text-gray-600">Background Sound</Label>
                 <Switch 
