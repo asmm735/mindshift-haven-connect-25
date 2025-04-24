@@ -1,14 +1,15 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Timer, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, Timer, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 type TimerMode = "focus";
 
@@ -18,55 +19,60 @@ interface TimerSettings {
 
 interface SoundOption {
   id: string;
-  name: string;
-  src: string;
+  title: string;
+  category: string;
+  audio_url: string;
 }
 
 const defaultSettings: TimerSettings = {
   focus: 25,
 };
 
-// We'll update sound options to fetch from Supabase in the future
-const soundOptions: SoundOption[] = [
-  { id: "rain", name: "Rain", src: "" }, 
-  { id: "forest", name: "Forest", src: "" }, 
-  { id: "ocean", name: "Ocean Waves", src: "" }, 
-  { id: "bonfire", name: "Bonfire", src: "" }, 
-  { id: "gamma", name: "Gamma Waves", src: "" }, 
-  { id: "alpha", name: "Alpha Waves", src: "" }, 
-  { id: "beta", name: "Beta Waves", src: "" }, 
-];
-
 const notificationSoundUrl = "https://soundbible.com/mp3/Electronic_Chime-KevanGC-495939803.mp3";
 
 const PomodoroTimer = () => {
+  const { toast } = useToast();
   const [settings, setSettings] = useState<TimerSettings>(defaultSettings);
   const [timeRemaining, setTimeRemaining] = useState(settings.focus * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [focusSessions, setFocusSessions] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [selectedSound, setSelectedSound] = useState<SoundOption>(soundOptions[0]);
   const [volume, setVolume] = useState(100);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const notificationRef = useRef<HTMLAudioElement | null>(null);
-  const { toast } = useToast();
 
-  // Only one mode now: focus
-  useEffect(() => {
-    setTimeRemaining(settings.focus * 60);
-    setIsRunning(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  // Fetch sounds from Supabase
+  const { 
+    data: soundOptions = [], 
+    isLoading: soundsLoading, 
+    error: soundsError 
+  } = useQuery({
+    queryKey: ['sound_therapy_tracks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sound_therapy_tracks')
+        .select('*');
+      
+      if (error) throw error;
+      return data as SoundOption[];
     }
-  }, [settings]);
+  });
+
+  const [selectedSound, setSelectedSound] = useState<SoundOption | null>(
+    soundOptions.length > 0 ? soundOptions[0] : null
+  );
+
+  // Update selected sound when sounds are loaded
+  useEffect(() => {
+    if (soundOptions.length > 0 && !selectedSound) {
+      setSelectedSound(soundOptions[0]);
+    }
+  }, [soundOptions]);
 
   useEffect(() => {
     if (typeof Audio !== 'undefined') {
       audioRef.current = new Audio();
-      audioRef.current.src = selectedSound.src;
-      audioRef.current.loop = true;
       audioRef.current.volume = volume / 100;
       audioRef.current.preload = "auto";
 
@@ -88,65 +94,15 @@ const PomodoroTimer = () => {
   }, []);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = selectedSound.src;
+    if (selectedSound && audioRef.current) {
+      audioRef.current.src = selectedSound.audio_url;
       audioRef.current.loop = true;
-      audioRef.current.volume = volume / 100;
-      if (soundEnabled && isRunning && selectedSound.src) {
-        audioRef.current.play().catch(() => {});
+
+      if (soundEnabled && isRunning) {
+        audioRef.current.play().catch(console.error);
       }
     }
-  }, [selectedSound]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      if (soundEnabled && isRunning && selectedSound.src) {
-        audioRef.current.play().catch(() => {});
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  }, [soundEnabled, isRunning]);
-
-  useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            handleTimerComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      if (soundEnabled && audioRef.current && selectedSound.src) {
-        audioRef.current.play().catch(() => {});
-      }
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [isRunning]);
+  }, [selectedSound, soundEnabled, isRunning]);
 
   const handleTimerComplete = () => {
     setIsRunning(false);
@@ -197,11 +153,103 @@ const PomodoroTimer = () => {
 
   // Helper to play sound preview
   const previewAudio = (sound: SoundOption) => {
-    if (!sound.src) return;
-    const audio = new Audio(sound.src);
+    if (!sound.audio_url) return;
+    const audio = new Audio(sound.audio_url);
     audio.volume = volume / 100;
     audio.play().catch(() => {});
     setTimeout(() => audio.pause(), 3000);
+  };
+
+  useEffect(() => {
+    if (isRunning) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            handleTimerComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      if (soundEnabled && audioRef.current && selectedSound) {
+        audioRef.current.play().catch(() => {});
+      }
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isRunning, soundEnabled, selectedSound]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (soundEnabled && isRunning && selectedSound) {
+        audioRef.current.play().catch(() => {});
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [soundEnabled, isRunning, selectedSound]);
+
+  // Modify the sound selection UI to use RadioGroup with new sounds
+  const renderSoundSelection = () => {
+    if (soundsLoading) {
+      return <Loader2 className="h-6 w-6 animate-spin text-mindshift-raspberry" />;
+    }
+
+    if (soundsError) {
+      return <p className="text-red-500">Error loading sounds</p>;
+    }
+
+    return (
+      <RadioGroup 
+        value={selectedSound?.id} 
+        onValueChange={(id) => {
+          const sound = soundOptions.find(s => s.id === id);
+          if (sound) setSelectedSound(sound);
+        }}
+        className="grid grid-cols-1 gap-2"
+      >
+        {soundOptions.map((sound) => (
+          <div key={sound.id} className="flex items-center space-x-2 border rounded-md p-3">
+            <RadioGroupItem value={sound.id} id={sound.id} />
+            <Label htmlFor={sound.id} className="flex-1">{sound.title}</Label>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0"
+              onClick={(e) => {
+                e.preventDefault();
+                const audio = new Audio(sound.audio_url);
+                audio.volume = volume / 100;
+                audio.play().catch(console.error);
+                setTimeout(() => audio.pause(), 3000);
+              }}
+            >
+              <Play className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </RadioGroup>
+    );
   };
 
   return (
@@ -312,29 +360,7 @@ const PomodoroTimer = () => {
               <div className={`space-y-4 ${!soundEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Select Sound</label>
-                  <RadioGroup 
-                    value={selectedSound.id} 
-                    onValueChange={handleSoundSelection}
-                    className="grid grid-cols-1 gap-2"
-                  >
-                    {soundOptions.map((sound) => (
-                      <div key={sound.id} className="flex items-center space-x-2 border rounded-md p-3">
-                        <RadioGroupItem value={sound.id} id={sound.id} />
-                        <Label htmlFor={sound.id} className="flex-1">{sound.name}</Label>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            previewAudio(sound);
-                          }}
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                  {renderSoundSelection()}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -373,4 +399,3 @@ const PomodoroTimer = () => {
 };
 
 export default PomodoroTimer;
-

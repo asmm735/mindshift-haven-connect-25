@@ -7,22 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
 
-// Define a local interface for the mapped therapist data
-interface MappedTherapist {
-  id: number;
-  name: string;
-  title: string;
-  specialty: string | null;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  address: string;
-  phone: string;
-  distance: string;
-  accepting: boolean;
-  city: string;
-}
-
 const locations = ["All", "Mumbai", "Navi Mumbai"];
 
 const TheraConnect = () => {
@@ -38,26 +22,11 @@ const TheraConnect = () => {
     }
   });
 
-  const mappedTherapists: MappedTherapist[] = therapistsData?.map(therapist => ({
-    id: parseInt(therapist.id) || Math.floor(Math.random() * 1000),
-    name: therapist.name || '',
-    title: therapist.description || 'Mental Health Professional',
-    specialty: null,
-    rating: 4.8,
-    reviewCount: 24,
-    image: `https://source.unsplash.com/random/300x300/?portrait&sig=${therapist.id}`,
-    address: therapist.address || '',
-    phone: '+1 (555) 123-4567',
-    distance: `${Math.floor(Math.random() * 5) + 1} miles away`,
-    accepting: therapist.verified || false,
-    city: therapist.city || '',
-  })) || [];
-
   const [filterLocation, setFilterLocation] = useState("All");
 
   const filteredTherapists = filterLocation === "All" 
-    ? mappedTherapists 
-    : mappedTherapists.filter(t => t.city === filterLocation);
+    ? therapistsData || [] 
+    : (therapistsData || []).filter(t => t.city === filterLocation);
 
   return (
     <PageLayout className="container mx-auto px-4">
@@ -97,7 +66,7 @@ const TheraConnect = () => {
                 Error loading therapists. Please try again later.
               </div>
             ) : filteredTherapists.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredTherapists.map((therapist) => (
                   <TherapistCard key={therapist.id} therapist={therapist} />
                 ))}
