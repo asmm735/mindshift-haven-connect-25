@@ -8,9 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { ChatMessage, typedTables } from "@/types/supabase-custom";
+import { ChatMessage } from "@/types/supabase-custom";
 
-// Predefined therapeutic responses for the AI chat
 const aiResponses = [
   "I hear you're going through a difficult time. How long have you been feeling this way?",
   "That sounds really challenging. Would it help to explore what might be triggering these feelings?",
@@ -24,7 +23,6 @@ const aiResponses = [
   "Thank you for trusting me with this. Would you like to explore some resources that might help with what you're experiencing?"
 ];
 
-// Enhanced therapeutic responses for specific emotions
 const anxietyResponses = [
   "I notice some anxiety in what you're sharing. Would a grounding exercise help right now?",
   "Anxiety can be really challenging to navigate. What helps you feel more centered when you experience these feelings?",
@@ -261,7 +259,6 @@ const AIChat = () => {
     }, 1000);
   };
 
-  // Breathing: Slower pace as requested
   const startBreathingExercise = (exerciseIndex: number) => {
     if (isBreathing) return;
 
@@ -274,7 +271,6 @@ const AIChat = () => {
     let stepTimeElapsed = 0;
     const stepCheckInterval = 500; // Check every 500ms
 
-    // Pace multiplier (slow everything down: base is 1, 2 is twice as slow)
     const pacingMultiplier = 2.2; // 2.2x slower than before
 
     const aiMessage: Message = {
@@ -299,7 +295,6 @@ const AIChat = () => {
       }
     }, stepCheckInterval);
 
-    // Calculate slower total duration: 3 relaxed cycles
     const totalDuration =
       exercise.stepDurations.reduce((a, b) => a + b, 0) * pacingMultiplier * 3;
 
