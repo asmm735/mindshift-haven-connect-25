@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,8 @@ interface SoundOption {
   id: string;
   title: string;
   category: string;
-  audio_url: string;
+  audio_url?: string; // Make this optional 
+  audio_file?: Uint8Array; // Add this new field
 }
 
 const defaultSettings: TimerSettings = {
@@ -44,7 +46,7 @@ const PomodoroTimer = () => {
 
   // Fetch sounds from Supabase
   const { 
-    data: soundOptions = [], 
+    data: soundOptionsData = [], 
     isLoading: soundsLoading, 
     error: soundsError 
   } = useQuery({
@@ -55,9 +57,23 @@ const PomodoroTimer = () => {
         .select('*');
       
       if (error) throw error;
-      return data as SoundOption[];
+      
+      // Transform the data to match our SoundOption interface
+      return data.map(track => ({
+        id: track.id,
+        title: track.title,
+        category: track.category,
+        // Create a temporary URL for the audio file
+        audio_url: track.audio_file ? URL.createObjectURL(
+          new Blob([track.audio_file], { type: 'audio/mpeg' })
+        ) : undefined,
+        audio_file: track.audio_file
+      }));
     }
   });
+
+  // Create derived state to ensure we have audio_url for each sound
+  const soundOptions = soundOptionsData.filter(sound => sound.audio_url);
 
   const [selectedSound, setSelectedSound] = useState<SoundOption | null>(
     soundOptions.length > 0 ? soundOptions[0] : null
@@ -94,7 +110,7 @@ const PomodoroTimer = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedSound && audioRef.current) {
+    if (selectedSound && audioRef.current && selectedSound.audio_url) {
       audioRef.current.src = selectedSound.audio_url;
       audioRef.current.loop = true;
 
@@ -172,7 +188,7 @@ const PomodoroTimer = () => {
         });
       }, 1000);
 
-      if (soundEnabled && audioRef.current && selectedSound) {
+      if (soundEnabled && audioRef.current && selectedSound?.audio_url) {
         audioRef.current.play().catch(() => {});
       }
     } else {
@@ -201,7 +217,7 @@ const PomodoroTimer = () => {
 
   useEffect(() => {
     if (audioRef.current) {
-      if (soundEnabled && isRunning && selectedSound) {
+      if (soundEnabled && isRunning && selectedSound?.audio_url) {
         audioRef.current.play().catch(() => {});
       } else {
         audioRef.current.pause();
@@ -238,10 +254,12 @@ const PomodoroTimer = () => {
               className="h-8 w-8 p-0"
               onClick={(e) => {
                 e.preventDefault();
-                const audio = new Audio(sound.audio_url);
-                audio.volume = volume / 100;
-                audio.play().catch(console.error);
-                setTimeout(() => audio.pause(), 3000);
+                if (sound.audio_url) {
+                  const audio = new Audio(sound.audio_url);
+                  audio.volume = volume / 100;
+                  audio.play().catch(console.error);
+                  setTimeout(() => audio.pause(), 3000);
+                }
               }}
             >
               <Play className="h-4 w-4" />
