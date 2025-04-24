@@ -55,16 +55,41 @@ const PomodoroTimer = () => {
         .select('*');
       
       if (error) throw error;
-      
-      return data.map(track => ({
-        id: track.id,
-        title: track.title,
-        category: track.category,
-        audio_url: track.audio_file ? URL.createObjectURL(
-          new Blob([track.audio_file], { type: 'audio/mpeg' })
-        ) : undefined,
-        audio_file: track.audio_file ? new Uint8Array(track.audio_file) : undefined
-      } as SoundOption));
+
+      return data.map(track => {
+        let audioFile: Uint8Array | undefined;
+        let audioUrl: string | undefined;
+        
+        if (track.audio_file) {
+          try {
+            if (track.audio_file instanceof Uint8Array) {
+              audioFile = track.audio_file;
+            } 
+            else if (typeof track.audio_file === 'string') {
+              const binary = atob(track.audio_file);
+              audioFile = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) {
+                audioFile[i] = binary.charCodeAt(i);
+              }
+            }
+            
+            if (audioFile) {
+              const blob = new Blob([audioFile], { type: 'audio/mpeg' });
+              audioUrl = URL.createObjectURL(blob);
+            }
+          } catch (e) {
+            console.error('Error processing audio file:', e);
+          }
+        }
+        
+        return {
+          id: track.id,
+          title: track.title,
+          category: track.category,
+          audio_url: audioUrl,
+          audio_file: audioFile
+        } as SoundOption;
+      });
     }
   });
 
