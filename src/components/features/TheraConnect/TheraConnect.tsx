@@ -1,13 +1,12 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Check } from "lucide-react";
-import { Therapist, typedFrom } from "@/types/supabase-custom";
+import { Therapist } from "@/types/supabase-custom";
 
-type Therapist = {
+type TherapistData = {
   id: string;
   name: string;
   description: string | null;
@@ -20,8 +19,8 @@ type Therapist = {
 
 const TheraConnect = () => {
   const [location, setLocation] = useState<string>("Mumbai");
-  const [therapists, setTherapists] = useState<Therapist[]>([]);
-  const [filteredTherapists, setFilteredTherapists] = useState<Therapist[]>([]);
+  const [therapists, setTherapists] = useState<TherapistData[]>([]);
+  const [filteredTherapists, setFilteredTherapists] = useState<TherapistData[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchTherapists = async () => {

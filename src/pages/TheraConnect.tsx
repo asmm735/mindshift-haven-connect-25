@@ -6,7 +6,22 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
-import { Therapist } from "@/types/supabase-custom";
+
+// Define a local interface for the mapped therapist data
+interface MappedTherapist {
+  id: number;
+  name: string;
+  title: string;
+  specialty: string | null;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  address: string;
+  phone: string;
+  distance: string;
+  accepting: boolean;
+  city: string;
+}
 
 const locations = ["All", "Mumbai", "Navi Mumbai"];
 
@@ -19,11 +34,11 @@ const TheraConnect = () => {
         .select('*')
         .order('name');
       if (error) throw error;
-      return data as Therapist[];
+      return data;
     }
   });
 
-  const mappedTherapists = therapistsData?.map(therapist => ({
+  const mappedTherapists: MappedTherapist[] = therapistsData?.map(therapist => ({
     id: parseInt(therapist.id) || Math.floor(Math.random() * 1000),
     name: therapist.name || '',
     title: therapist.description || 'Mental Health Professional',
@@ -36,15 +51,13 @@ const TheraConnect = () => {
     distance: `${Math.floor(Math.random() * 5) + 1} miles away`,
     accepting: therapist.verified || false,
     city: therapist.city || '',
-  }));
+  })) || [];
 
   const [filterLocation, setFilterLocation] = useState("All");
 
-  const filteredTherapists = mappedTherapists
-    ? filterLocation === "All"
-      ? mappedTherapists
-      : mappedTherapists.filter(t => t.city === filterLocation)
-    : [];
+  const filteredTherapists = filterLocation === "All" 
+    ? mappedTherapists 
+    : mappedTherapists.filter(t => t.city === filterLocation);
 
   return (
     <PageLayout className="container mx-auto px-4">
@@ -83,7 +96,7 @@ const TheraConnect = () => {
               <div className="text-center py-10 text-red-500">
                 Error loading therapists. Please try again later.
               </div>
-            ) : filteredTherapists && filteredTherapists.length > 0 ? (
+            ) : filteredTherapists.length > 0 ? (
               <div className="grid grid-cols-1 gap-6">
                 {filteredTherapists.map((therapist) => (
                   <TherapistCard key={therapist.id} therapist={therapist} />

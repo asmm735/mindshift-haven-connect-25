@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -7,9 +6,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, User } from "lucide-react";
-import { Review, typedFrom } from "@/types/supabase-custom";
+import { Review } from "@/types/supabase-custom";
 
-type Review = {
+type ReviewData = {
   id: string;
   user_id: string;
   content: string;
@@ -18,7 +17,7 @@ type Review = {
 };
 
 const ReviewsSection = () => {
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [content, setContent] = useState("");
   const [rating, setRating] = useState<number>(5);
   const [isSubmitting, setIsSubmitting] = useState(false);

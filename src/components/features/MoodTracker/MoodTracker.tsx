@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from "recharts";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { MoodEntry, typedFrom } from "@/types/supabase-custom";
+import { MoodEntry } from "@/types/supabase-custom";
 import { Smile, Meh, Frown, Calendar } from "lucide-react";
 
 const moodOptions = [
@@ -18,11 +18,11 @@ const moodOptions = [
   { label: "Very Sad", value: 1, color: "#F87171", icon: <Frown className="w-6 h-6" /> },
 ];
 
-type MoodEntry = {
-  id: string;
+type MoodEntryChartData = {
+  name: string;
   mood: number;
   notes: string | null;
-  entry_date: string; // YYYY-MM-DD
+  moodLabel: string;
 };
 
 const MoodTracker = () => {
@@ -160,7 +160,7 @@ const MoodTracker = () => {
     return null;
   };
 
-  const chartData = moodHistory.map(item => ({
+  const chartData: MoodEntryChartData[] = moodHistory.map(item => ({
     name: format(new Date(item.entry_date), "MMM dd"),
     mood: item.mood,
     notes: item.notes,

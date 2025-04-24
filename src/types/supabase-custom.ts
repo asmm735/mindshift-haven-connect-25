@@ -49,11 +49,11 @@ export type SoundTherapyTrack = {
   created_at: string | null;
 };
 
-// Helper functions to type-cast Supabase responses
+// Helper functions to provide type information for tables
 export const typedFrom = {
-  chat_messages: () => 'chat_messages' as unknown as ChatMessage,
-  mood_entries: () => 'mood_entries' as unknown as MoodEntry,
-  reviews: () => 'reviews' as unknown as Review,
-  therapists: () => 'therapists' as unknown as Therapist,
-  sound_therapy_tracks: () => 'sound_therapy_tracks' as unknown as SoundTherapyTrack,
+  chat_messages: () => 'chat_messages',
+  mood_entries: () => 'mood_entries',
+  reviews: () => 'reviews',
+  therapists: () => 'therapists',
+  sound_therapy_tracks: () => 'sound_therapy_tracks',
 };
