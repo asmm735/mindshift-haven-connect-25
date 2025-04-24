@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Check } from "lucide-react";
+import { Therapist, typedFrom } from "@/types/supabase-custom";
 
 type Therapist = {
   id: string;

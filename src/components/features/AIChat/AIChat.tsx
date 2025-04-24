@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { ChatMessage, typedFrom } from "@/types/supabase-custom";
 
 // Predefined therapeutic responses for the AI chat
 const aiResponses = [
@@ -112,7 +113,7 @@ const AIChat = () => {
           if (error) throw error;
           
           if (data && data.length > 0) {
-            const loadedMessages: Message[] = data.map((msg) => ({
+            const loadedMessages: Message[] = data.map((msg: ChatMessage) => ({
               id: Number(
                 typeof msg.id === "number"
                   ? msg.id

@@ -1,3 +1,4 @@
+
 import PageLayout from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import TherapistCard from "@/components/features/TheraConnect/TherapistCard";
@@ -5,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
+import { Therapist } from "@/types/supabase-custom";
 
 const locations = ["All", "Mumbai", "Navi Mumbai"];
 
@@ -17,7 +19,7 @@ const TheraConnect = () => {
         .select('*')
         .order('name');
       if (error) throw error;
-      return data;
+      return data as Therapist[];
     }
   });
 

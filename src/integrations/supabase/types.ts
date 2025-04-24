@@ -9,7 +9,147 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          content: string
+          id: string
+          metadata: Json | null
+          timestamp: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mood_entries: {
+        Row: {
+          created_at: string | null
+          entry_date: string
+          id: string
+          mood: number
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          mood: number
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          mood?: number
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sound_therapy_tracks: {
+        Row: {
+          audio_url: string
+          category: string
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          id: string
+          title: string
+        }
+        Insert: {
+          audio_url: string
+          category: string
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          title: string
+        }
+        Update: {
+          audio_url?: string
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      therapists: {
+        Row: {
+          address: string
+          city: string
+          description: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          verified: boolean | null
+        }
+        Insert: {
+          address: string
+          city: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          verified?: boolean | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

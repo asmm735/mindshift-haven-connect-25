@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, User } from "lucide-react";
+import { Review, typedFrom } from "@/types/supabase-custom";
 
 type Review = {
   id: string;
