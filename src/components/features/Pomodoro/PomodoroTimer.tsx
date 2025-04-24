@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import SoundSelector from "./SoundSelector";
 
 type TimerMode = "focus";
 
@@ -61,18 +62,14 @@ const PomodoroTimer = () => {
         
         if (track.audio_file) {
           try {
-            // Fix: Handle binary data properly
             let audioArray: Uint8Array;
             
             if (typeof track.audio_file === 'string') {
-              // Convert base64 string to Uint8Array
               audioArray = Uint8Array.from(atob(track.audio_file), c => c.charCodeAt(0));
             } else {
-              // Handle if it's already a binary format
               audioArray = new Uint8Array(track.audio_file);
             }
             
-            // Create a blob from the Uint8Array and generate URL
             const blob = new Blob([audioArray], { type: 'audio/mpeg' });
             audioUrl = URL.createObjectURL(blob);
           } catch (e) {
@@ -85,7 +82,6 @@ const PomodoroTimer = () => {
           title: track.title,
           category: track.category,
           audio_url: audioUrl,
-          // Keep the original audio_file as is, the type now accepts string
           audio_file: track.audio_file
         } as SoundOption;
       });
@@ -251,37 +247,13 @@ const PomodoroTimer = () => {
     }
 
     return (
-      <RadioGroup 
-        value={selectedSound?.id} 
-        onValueChange={(id) => {
-          const sound = soundOptions.find(s => s.id === id);
-          if (sound) setSelectedSound(sound);
-        }}
-        className="grid grid-cols-1 gap-2"
-      >
-        {soundOptions.map((sound) => (
-          <div key={sound.id} className="flex items-center space-x-2 border rounded-md p-3">
-            <RadioGroupItem value={sound.id} id={sound.id} />
-            <Label htmlFor={sound.id} className="flex-1">{sound.title}</Label>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 w-8 p-0"
-              onClick={(e) => {
-                e.preventDefault();
-                if (sound.audio_url) {
-                  const audio = new Audio(sound.audio_url);
-                  audio.volume = volume / 100;
-                  audio.play().catch(console.error);
-                  setTimeout(() => audio.pause(), 3000);
-                }
-              }}
-            >
-              <Play className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-      </RadioGroup>
+      <SoundSelector
+        sounds={soundOptions}
+        selectedSound={selectedSound}
+        onSelectSound={setSelectedSound}
+        volume={volume}
+        isPlaying={isRunning && soundEnabled}
+      />
     );
   };
 
