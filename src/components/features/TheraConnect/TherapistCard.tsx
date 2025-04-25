@@ -33,14 +33,24 @@ const TherapistCard = ({ therapist }: TherapistCardProps) => {
           {therapist.phone_number && (
             <div className="flex items-center text-gray-600">
               <Phone className="h-5 w-5 mr-2 text-mindshift-raspberry" />
-              <span>{therapist.phone_number}</span>
+              <a 
+                href={`tel:${therapist.phone_number}`}
+                className="hover:text-mindshift-raspberry transition-colors"
+              >
+                {therapist.phone_number}
+              </a>
             </div>
           )}
 
           {therapist.email && (
             <div className="flex items-center text-gray-600">
               <Mail className="h-5 w-5 mr-2 text-mindshift-raspberry" />
-              <span>{therapist.email}</span>
+              <a 
+                href={`mailto:${therapist.email}`}
+                className="hover:text-mindshift-raspberry transition-colors"
+              >
+                {therapist.email}
+              </a>
             </div>
           )}
         </div>

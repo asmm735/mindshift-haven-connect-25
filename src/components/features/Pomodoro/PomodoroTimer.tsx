@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,10 +46,10 @@ const PomodoroTimer = () => {
 
   const { 
     data: soundOptionsData = [], 
-    isLoading: soundsLoading, 
+    isLoading: isSoundsLoading,
     error: soundsError 
   } = useQuery({
-    queryKey: ['sound_therapy_tracks'],
+    queryKey: ['soundTracks'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sound_therapy_tracks')
@@ -60,7 +60,14 @@ const PomodoroTimer = () => {
     }
   });
 
-  const soundOptions = soundOptionsData.filter(sound => sound.audio_url);
+  const soundOptions = useMemo(() => 
+    soundOptionsData.map(track => ({
+      id: track.id,
+      title: track.title,
+      category: track.category,
+      audio_url: track.audio_url || '',
+      description: track.description
+    })), [soundOptionsData]);
 
   const [selectedSound, setSelectedSound] = useState<SoundOption | null>(
     soundOptions.length > 0 ? soundOptions[0] : null
@@ -209,18 +216,14 @@ const PomodoroTimer = () => {
     }
   }, [soundEnabled, isRunning, selectedSound]);
 
-  const renderSoundSelection = () => {
-    if (soundsLoading) {
-      return <Loader2 className="h-6 w-6 animate-spin text-mindshift-raspberry" />;
-    }
-
-    if (soundsError) {
-      return <p className="text-red-500">Error loading sounds</p>;
+  const renderSoundSelector = () => {
+    if (isSoundsLoading) {
+      return <div>Loading sounds...</div>;
     }
 
     return (
       <SoundSelector
-        sounds={soundOptionsData}
+        sounds={soundOptions}
         selectedSound={selectedSound}
         onSelectSound={setSelectedSound}
         volume={volume}
@@ -336,7 +339,7 @@ const PomodoroTimer = () => {
               <div className={`space-y-4 ${!soundEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Select Sound</label>
-                  {renderSoundSelection()}
+                  {renderSoundSelector()}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">

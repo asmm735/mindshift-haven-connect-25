@@ -22,24 +22,36 @@ interface SoundSelectorProps {
 }
 
 const SoundSelector = ({ sounds, selectedSound, onSelectSound, volume, isPlaying }: SoundSelectorProps) => {
+  const [previewingSoundId, setPreviewingSoundId] = useState<string | null>(null);
   const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
 
   const handlePreview = (sound: SoundOption) => {
-    if (previewAudio) {
+    // If the same sound is already playing, stop it
+    if (previewingSoundId === sound.id && previewAudio) {
       previewAudio.pause();
       setPreviewAudio(null);
+      setPreviewingSoundId(null);
       return;
     }
 
+    // If another sound is playing, stop it first
+    if (previewAudio) {
+      previewAudio.pause();
+      setPreviewAudio(null);
+    }
+
+    // Start playing the new sound
     const audio = new Audio(sound.audio_url);
     audio.volume = volume / 100;
     audio.play().catch(console.error);
     setPreviewAudio(audio);
+    setPreviewingSoundId(sound.id);
     
     // Stop preview after 3 seconds
     setTimeout(() => {
       audio.pause();
       setPreviewAudio(null);
+      setPreviewingSoundId(null);
     }, 3000);
   };
 
@@ -70,7 +82,7 @@ const SoundSelector = ({ sounds, selectedSound, onSelectSound, volume, isPlaying
               handlePreview(sound);
             }}
           >
-            {previewAudio ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {previewingSoundId === sound.id ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </Button>
         </div>
       ))}

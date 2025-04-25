@@ -1,4 +1,3 @@
-
 // Update the Therapist type to include new fields
 export type Therapist = {
   id: string;
@@ -42,19 +41,22 @@ export type Review = {
   created_at: string | null;
 };
 
+// Add SoundTherapyTrack type for SoundSelector component
+export type SoundTherapyTrack = {
+  id: string;
+  title: string;
+  audio_url: string | null;
+  category: string;
+  description: string | null;
+  duration: number | null;
+  created_at: string | null;
+};
+
 // Add typedTables for consistency with imports
 export const typedTables = {
   chat_messages: {} as ChatMessage,
   mood_entries: {} as MoodEntry,
   reviews: {} as Review,
   therapists: {} as Therapist,
-  sound_therapy_tracks: {} as {
-    id: string;
-    title: string;
-    audio_file: Uint8Array | string | null;
-    category: string;
-    description: string | null;
-    duration: number | null;
-    created_at: string | null;
-  }
+  sound_therapy_tracks: {} as SoundTherapyTrack
 };
