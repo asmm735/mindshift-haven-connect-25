@@ -161,7 +161,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_mood_patterns: {
+        Args: { user_id_param: string }
+        Returns: {
+          has_concerning_pattern: boolean
+          days_without_entry: number
+          negative_mood_count: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

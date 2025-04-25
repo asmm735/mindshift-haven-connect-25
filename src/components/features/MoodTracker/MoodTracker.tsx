@@ -8,14 +8,17 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { MoodEntry } from "@/types/supabase-custom";
-import { Smile, Meh, Frown, Calendar } from "lucide-react";
+import { Smile, Meh, Frown, Angry, Calendar } from "lucide-react";
+import MoodAlert from "./MoodAlert";
 
 const moodOptions = [
-  { label: "Very Happy", value: 5, color: "#4ADE80", icon: <Smile className="w-6 h-6" /> },
-  { label: "Happy", value: 4, color: "#A3E635", icon: <Smile className="w-6 h-6" /> },
-  { label: "Neutral", value: 3, color: "#FBBF24", icon: <Meh className="w-6 h-6" /> },
-  { label: "Sad", value: 2, color: "#FB923C", icon: <Meh className="w-6 h-6" /> },
-  { label: "Very Sad", value: 1, color: "#F87171", icon: <Frown className="w-6 h-6" /> },
+  { label: "Very Happy", value: 7, color: "#4ADE80", icon: <Smile className="w-6 h-6" /> },
+  { label: "Happy", value: 6, color: "#A3E635", icon: <Smile className="w-6 h-6" /> },
+  { label: "Neutral", value: 5, color: "#FBBF24", icon: <Meh className="w-6 h-6" /> },
+  { label: "Sad", value: 4, color: "#FB923C", icon: <Meh className="w-6 h-6" /> },
+  { label: "Anxious", value: 3, color: "#F87171", icon: <Frown className="w-6 h-6" /> },
+  { label: "Stressed", value: 2, color: "#EF4444", icon: <Angry className="w-6 h-6" /> },
+  { label: "Angry", value: 1, color: "#DC2626", icon: <Angry className="w-6 h-6" /> },
 ];
 
 type MoodEntryChartData = {
@@ -32,6 +35,11 @@ const MoodTracker = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [moodPatterns, setMoodPatterns] = useState<{
+    has_concerning_pattern: boolean;
+    days_without_entry: number;
+    negative_mood_count: number;
+  } | null>(null);
   const { toast } = useToast();
 
   const todayISO = format(new Date(), "yyyy-MM-dd");
@@ -82,6 +90,12 @@ const MoodTracker = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (userId) {
+      checkMoodPatterns(userId);
+    }
+  }, [userId, moodHistory]);
 
   useEffect(() => {
     if (todayEntry) {
@@ -139,6 +153,16 @@ const MoodTracker = () => {
     }
   };
 
+  const checkMoodPatterns = async (userId: string) => {
+    const { data, error } = await supabase.rpc('check_mood_patterns', {
+      user_id_param: userId
+    });
+
+    if (!error && data && data.length > 0) {
+      setMoodPatterns(data[0]);
+    }
+  };
+
   const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       const moodValue = payload[0].value;
@@ -169,6 +193,15 @@ const MoodTracker = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+      {!loading && userId && moodPatterns?.has_concerning_pattern && (
+        <div className="md:col-span-2">
+          <MoodAlert 
+            daysWithoutEntry={moodPatterns.days_without_entry}
+            negativeCount={moodPatterns.negative_mood_count}
+          />
+        </div>
+      )}
+      
       {!loading && userId && (
         <Card className="mindshift-card">
           <CardHeader>
@@ -218,6 +251,7 @@ const MoodTracker = () => {
           </CardFooter>
         </Card>
       )}
+      
       <Card className="mindshift-card">
         <CardHeader>
           <CardTitle className="text-2xl text-mindshift-raspberry">Your Mood History</CardTitle>
