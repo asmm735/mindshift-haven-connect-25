@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import SoundSelector from "./SoundSelector";
+import { SoundTherapyTrack } from "@/types/supabase-custom";
 
 type TimerMode = "focus";
 
@@ -18,12 +19,12 @@ interface TimerSettings {
   focus: number;
 }
 
-interface SoundOption {
+interface TimerSoundOption {
   id: string;
   title: string;
   category: string;
-  audio_url?: string; 
-  audio_file?: Uint8Array | string | null;
+  audio_url: string;
+  description?: string | null;
 }
 
 const defaultSettings: TimerSettings = {
@@ -60,7 +61,7 @@ const PomodoroTimer = () => {
     }
   });
 
-  const soundOptions = useMemo(() => 
+  const soundOptions: TimerSoundOption[] = useMemo(() => 
     soundOptionsData.map(track => ({
       id: track.id,
       title: track.title,
@@ -69,7 +70,7 @@ const PomodoroTimer = () => {
       description: track.description
     })), [soundOptionsData]);
 
-  const [selectedSound, setSelectedSound] = useState<SoundOption | null>(
+  const [selectedSound, setSelectedSound] = useState<TimerSoundOption | null>(
     soundOptions.length > 0 ? soundOptions[0] : null
   );
 
@@ -154,9 +155,8 @@ const PomodoroTimer = () => {
     setSoundEnabled(checked);
   };
 
-  const handleSoundSelection = (soundId: string) => {
-    const sound = soundOptions.find(s => s.id === soundId);
-    if (sound) setSelectedSound(sound);
+  const handleSoundSelection = (sound: TimerSoundOption) => {
+    setSelectedSound(sound);
   };
 
   const previewAudio = (sound: SoundOption) => {
@@ -225,7 +225,7 @@ const PomodoroTimer = () => {
       <SoundSelector
         sounds={soundOptions}
         selectedSound={selectedSound}
-        onSelectSound={setSelectedSound}
+        onSelectSound={handleSoundSelection}
         volume={volume}
         isPlaying={isRunning && soundEnabled}
       />

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 
-interface SoundOption {
+export interface SoundOption {
   id: string;
   title: string;
   category: string;

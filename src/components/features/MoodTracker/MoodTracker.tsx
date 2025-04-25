@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from "recharts";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { MoodEntry } from "@/types/supabase-custom";
+import { MoodEntry, MoodValue } from "@/types/supabase-custom";
 import { Smile, Meh, Frown, Angry, Calendar } from "lucide-react";
 import MoodAlert from "./MoodAlert";
 
@@ -86,7 +87,12 @@ const MoodTracker = () => {
     if (error) {
       toast({ title: "Failed to load mood history", variant: "destructive" });
     } else if (data) {
-      setMoodHistory(data);
+      // Convert the raw mood number to MoodValue type
+      const typedData = data.map(entry => ({
+        ...entry,
+        mood: entry.mood as MoodValue
+      }));
+      setMoodHistory(typedData);
     }
     setLoading(false);
   };
@@ -120,11 +126,14 @@ const MoodTracker = () => {
       return;
     }
     setIsSubmitting(true);
+    
+    // Convert string to MoodValue for type safety
+    const moodValue = parseInt(selectedMood) as MoodValue;
 
     if (todayEntry) {
       const { error } = await supabase
         .from('mood_entries')
-        .update({ mood: parseInt(selectedMood), notes })
+        .update({ mood: moodValue, notes })
         .eq('user_id', userId)
         .eq('entry_date', todayISO);
       setIsSubmitting(false);
@@ -137,7 +146,7 @@ const MoodTracker = () => {
       }
     } else {
       const { error } = await supabase.from('mood_entries').insert({
-        mood: parseInt(selectedMood),
+        mood: moodValue,
         notes,
         entry_date: todayISO,
         user_id: userId
