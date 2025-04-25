@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,17 +8,20 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { MoodEntry, MoodValue } from "@/types/supabase-custom";
-import { Smile, Meh, Frown, Angry, Calendar } from "lucide-react";
+import { Smile, Heart, Sun, CircleDot, Battery, Frown, Cloud, CloudRain, Zap, Skull } from "lucide-react";
 import MoodAlert from "./MoodAlert";
 
 const moodOptions = [
-  { label: "Very Happy", value: 7, color: "#4ADE80", icon: <Smile className="w-6 h-6" /> },
-  { label: "Happy", value: 6, color: "#A3E635", icon: <Smile className="w-6 h-6" /> },
-  { label: "Neutral", value: 5, color: "#FBBF24", icon: <Meh className="w-6 h-6" /> },
-  { label: "Sad", value: 4, color: "#FB923C", icon: <Meh className="w-6 h-6" /> },
-  { label: "Anxious", value: 3, color: "#F87171", icon: <Frown className="w-6 h-6" /> },
-  { label: "Stressed", value: 2, color: "#EF4444", icon: <Angry className="w-6 h-6" /> },
-  { label: "Angry", value: 1, color: "#DC2626", icon: <Angry className="w-6 h-6" /> },
+  { label: "Excited", value: 1, color: "#22c55e", icon: <Heart className="w-6 h-6" /> },
+  { label: "Happy", value: 2, color: "#4ade80", icon: <Smile className="w-6 h-6" /> },
+  { label: "Calm", value: 3, color: "#60a5fa", icon: <Sun className="w-6 h-6" /> },
+  { label: "Normal", value: 4, color: "#93c5fd", icon: <CircleDot className="w-6 h-6" /> },
+  { label: "Exhausted", value: 5, color: "#fbbf24", icon: <Battery className="w-6 h-6" /> },
+  { label: "Frustrated", value: 6, color: "#fb923c", icon: <Frown className="w-6 h-6" /> },
+  { label: "Sad", value: 7, color: "#f87171", icon: <Cloud className="w-6 h-6" /> },
+  { label: "Anxious", value: 8, color: "#ef4444", icon: <CloudRain className="w-6 h-6" /> },
+  { label: "Stressed", value: 9, color: "#dc2626", icon: <Zap className="w-6 h-6" /> },
+  { label: "Depressed", value: 10, color: "#991b1b", icon: <Skull className="w-6 h-6" /> },
 ];
 
 type MoodEntryChartData = {
@@ -87,7 +89,6 @@ const MoodTracker = () => {
     if (error) {
       toast({ title: "Failed to load mood history", variant: "destructive" });
     } else if (data) {
-      // Convert the raw mood number to MoodValue type
       const typedData = data.map(entry => ({
         ...entry,
         mood: entry.mood as MoodValue
@@ -127,7 +128,6 @@ const MoodTracker = () => {
     }
     setIsSubmitting(true);
     
-    // Convert string to MoodValue for type safety
     const moodValue = parseInt(selectedMood) as MoodValue;
 
     if (todayEntry) {
@@ -231,7 +231,10 @@ const MoodTracker = () => {
                     }`}
                     onClick={() => handleMoodSelect(option.value.toString())}
                   >
-                    <div className="w-8 h-8 rounded-full mb-1 flex items-center justify-center" style={{ color: option.color }}>
+                    <div 
+                      className="w-8 h-8 rounded-full mb-1 flex items-center justify-center" 
+                      style={{ color: option.color }}
+                    >
                       {option.icon}
                     </div>
                     <span className="text-xs">{option.label}</span>
@@ -281,12 +284,12 @@ const MoodTracker = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" stroke="#666" />
                 <YAxis 
-                  domain={[1, 5]} 
-                  ticks={[1, 2, 3, 4, 5]} 
+                  domain={[1, 10]} 
+                  ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} 
                   stroke="#666"
                   tickFormatter={(value) => {
                     const mood = moodOptions.find(m => m.value === value);
-                    return mood ? mood.label.split(" ")[0] : "";
+                    return mood ? mood.label : "";
                   }}
                 />
                 <Tooltip content={<CustomTooltip />} />

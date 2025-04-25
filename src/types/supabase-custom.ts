@@ -23,7 +23,7 @@ export type ChatMessage = {
 };
 
 // Add additional type for the Mood value with new options
-export type MoodValue = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type MoodValue = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 // Update MoodEntry type to use the new MoodValue type
 export type MoodEntry = {

@@ -159,7 +159,7 @@ const PomodoroTimer = () => {
     setSelectedSound(sound);
   };
 
-  const previewAudio = (sound: SoundOption) => {
+  const previewAudio = (sound: TimerSoundOption) => {
     if (!sound.audio_url) return;
     const audio = new Audio(sound.audio_url);
     audio.volume = volume / 100;
