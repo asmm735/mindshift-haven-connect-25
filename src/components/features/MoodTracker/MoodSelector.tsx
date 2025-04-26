@@ -33,25 +33,28 @@ export const MoodSelector = ({
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Select your mood</label>
           <div className="grid grid-cols-5 gap-2">
-            {moodOptions.map(option => (
-              <button
-                key={option.value}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${
-                  selectedMood === option.value.toString()
-                    ? "border-mindshift-raspberry bg-mindshift-raspberry/10"
-                    : "border-gray-200 hover:border-mindshift-lavender"
-                }`}
-                onClick={() => onMoodSelect(option.value.toString())}
-              >
-                <div 
-                  className="w-8 h-8 rounded-full mb-1 flex items-center justify-center" 
-                  style={{ color: option.color }}
+            {moodOptions.map(option => {
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.value}
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${
+                    selectedMood === option.value.toString()
+                      ? "border-mindshift-raspberry bg-mindshift-raspberry/10"
+                      : "border-gray-200 hover:border-mindshift-lavender"
+                  }`}
+                  onClick={() => onMoodSelect(option.value.toString())}
                 >
-                  {option.icon}
-                </div>
-                <span className="text-xs">{option.label}</span>
-              </button>
-            ))}
+                  <div 
+                    className="w-8 h-8 rounded-full mb-1 flex items-center justify-center" 
+                    style={{ color: option.color }}
+                  >
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs">{option.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="space-y-2">

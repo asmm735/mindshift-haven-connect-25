@@ -5,7 +5,7 @@ export type MoodOption = {
   label: string;
   value: MoodValue;
   color: string;
-  icon: JSX.Element;
+  icon: React.ComponentType<{ className?: string }>;
 };
 
 export type MoodEntryChartData = {
