@@ -120,7 +120,7 @@ const AIChat = () => {
     return messages
       .filter(msg => msg.type === "ai")
       .map(msg => msg.text)
-      .slice(-5);
+      .slice(-5); // Keep track of last 5 AI messages
   };
 
   const simulateTyping = (response: string, callback: (text: string) => void) => {
@@ -136,7 +136,7 @@ const AIChat = () => {
       }
     }, typingSpeed);
     
-    // Safety timeout to ensure response always completes (3-10 seconds based on length)
+    // Safety timeout to ensure response always completes
     setTimeout(() => {
       clearInterval(typingInterval);
       callback(response);
@@ -161,7 +161,7 @@ const AIChat = () => {
     // Get recent AI messages to avoid repetition
     const previousAIMessages = getPreviousAIMessages();
     
-    // Generate a therapeutic response based on user input
+    // Generate a response based on user input
     const aiResponse = getTherapeuticResponse(userMessage.text, previousAIMessages);
     
     // Add a small delay and typing simulation for realism

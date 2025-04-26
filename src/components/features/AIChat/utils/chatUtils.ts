@@ -1,4 +1,3 @@
-
 // List of basic greetings
 const greetings = ["hi", "hello", "hey", "greetings", "howdy", "yo"];
 
@@ -99,13 +98,15 @@ const angerResponses = [
 // Responses for general negative emotions
 const negativeEmotionResponses = [
   "I'm sorry you're feeling this way. Would you like to talk more about what's happening?",
-  "Thank you for sharing how you're feeling with me. It takes courage to be vulnerable. What do you think might help you feel even slightly better right now?",
-  "That sounds really difficult. I'm here to listen if you want to share more about your experience.",
-  "It's okay to feel this way. Your emotions are valid. Would it help to explore some coping strategies together?",
-  "Sometimes difficult emotions come in waves. Is there something specific that triggered these feelings today?",
-  "I'm here with you through these difficult feelings. Would you like to try a brief mindfulness exercise to help center yourself?",
-  "It sounds like you're going through a tough time. Would checking in with your mood using our mood tracker help right now?",
-  "When we name our emotions, it can help us process them better. Is there anything else you're feeling alongside this?"
+  "Thank you for sharing that with me. How long have you been feeling this way?",
+  "That sounds challenging. What kind of support would feel most helpful right now?",
+  "I'm here with you. What thoughts or feelings are coming up for you as we talk?",
+  "It takes courage to share these feelings. Would it help to explore some coping strategies together?",
+  "I notice what you're saying. How has this been affecting your daily life?",
+  "You're not alone in what you're experiencing. Many people go through similar challenges. What has helped you cope in the past?",
+  "I'm listening. Would you like to talk more about how this is impacting you?",
+  "That makes sense given what you're going through. How are you taking care of yourself during this difficult time?",
+  "I appreciate you trusting me with this. What would feel like a small step forward right now?"
 ];
 
 // General therapeutic responses
@@ -120,6 +121,20 @@ const generalTherapeuticResponses = [
   "I'm listening. Would you like to talk more about how this is impacting you?",
   "That makes sense given what you're going through. How are you taking care of yourself during this difficult time?",
   "I appreciate you trusting me with this. What would feel like a small step forward right now?"
+];
+
+// Add small talk responses for general conversation
+const smallTalkResponses = [
+  "What did you do today?",
+  "Have you taken a break lately?",
+  "What's something that made you smile recently?",
+  "How has your week been going?",
+  "Is there anything specific you'd like to talk about?",
+  "What helps you relax when you need to unwind?",
+  "Have you tried any new activities lately?",
+  "What's been on your mind today?",
+  "How do you usually spend your free time?",
+  "What's a small victory you've had recently?"
 ];
 
 // Function to detect greetings
@@ -177,33 +192,38 @@ export const mentionsBreathingOrExercises = (text: string): boolean => {
 
 // Function to get a therapeutic response based on user input
 export const getTherapeuticResponse = (userInput: string, previousMessages: string[] = []): string => {
-  // Skip repetitive responses by checking if a similar message was used recently
-  const isDuplicate = (response: string) => previousMessages.length > 0 && 
-    previousMessages.slice(-3).some(msg => 
-      msg.toLowerCase().includes(response.substring(0, 10).toLowerCase())
-    );
+  const lowerInput = userInput.toLowerCase();
   
-  // Get a random response that isn't duplicate
+  // Get a unique response that hasn't been used recently
   const getUniqueResponse = (responses: string[]): string => {
-    let filteredResponses = responses.filter(r => !isDuplicate(r));
-    // If we filtered out all options, just return any random response
-    if (filteredResponses.length === 0) filteredResponses = responses;
+    let filteredResponses = responses.filter(r => 
+      !previousMessages.slice(-5).some(msg => 
+        msg.toLowerCase().includes(r.substring(0, 15).toLowerCase())
+      )
+    );
+    
+    // If all responses have been used recently, reset and use any
+    if (filteredResponses.length === 0) {
+      filteredResponses = responses;
+    }
+    
     return filteredResponses[Math.floor(Math.random() * filteredResponses.length)];
   };
 
-  // Check if it's a greeting
-  if (isGreeting(userInput)) {
+  // Check for greetings
+  if (isGreeting(lowerInput)) {
     return getUniqueResponse(greetingResponses);
   }
   
   // Check for profanity
-  if (containsProfanity(userInput)) {
+  if (containsProfanity(lowerInput)) {
     return getUniqueResponse(profanityResponses);
   }
   
-  // Detect emotional state and respond accordingly
-  const emotionalState = detectEmotionalState(userInput);
+  // Detect emotional state
+  const emotionalState = detectEmotionalState(lowerInput);
   
+  // Return appropriate response based on emotional state
   if (emotionalState === "anxiety") {
     return getUniqueResponse(anxietyResponses);
   }
@@ -221,10 +241,10 @@ export const getTherapeuticResponse = (userInput: string, previousMessages: stri
   }
   
   // Check if user mentioned breathing or exercises
-  if (mentionsBreathingOrExercises(userInput)) {
+  if (mentionsBreathingOrExercises(lowerInput)) {
     return "Would you like to try one of our breathing exercises? They can be really helpful for finding calm in difficult moments.";
   }
   
-  // Default to general therapeutic responses
-  return getUniqueResponse(generalTherapeuticResponses);
+  // If no specific triggers are detected, engage in small talk
+  return getUniqueResponse(smallTalkResponses);
 };
