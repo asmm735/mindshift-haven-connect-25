@@ -1,8 +1,8 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CalendarIcon } from "lucide-react";
-import { MoodAlert } from "./MoodAlert";
+import MoodAlert from "./MoodAlert";
 import { MoodChart } from "./MoodChart";
 import { MoodSelector } from "./MoodSelector";
 import { useMoodTracking } from "./hooks/useMoodTracking";
