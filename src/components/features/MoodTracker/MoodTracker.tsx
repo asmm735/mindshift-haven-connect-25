@@ -195,7 +195,7 @@ const MoodTracker = () => {
 
   const chartData: MoodEntryChartData[] = moodHistory.map(item => ({
     name: format(new Date(item.entry_date), "MMM dd"),
-    mood: item.mood,
+    mood: 11 - item.mood,
     notes: item.notes,
     moodLabel: moodOptions.find(option => option.value === item.mood)?.label ?? "",
   }));
@@ -288,7 +288,8 @@ const MoodTracker = () => {
                   ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} 
                   stroke="#666"
                   tickFormatter={(value) => {
-                    const mood = moodOptions.find(m => m.value === value);
+                    const reversedValue = 11 - value;
+                    const mood = moodOptions.find(m => m.value === reversedValue);
                     return mood ? mood.label : "";
                   }}
                 />
