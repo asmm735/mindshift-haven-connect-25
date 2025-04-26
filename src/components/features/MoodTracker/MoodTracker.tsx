@@ -8,7 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { MoodEntry, MoodValue } from "@/types/supabase-custom";
-import { Smile, Heart, Sun, CircleDot, Battery, Frown, Cloud, CloudRain, Zap, Skull } from "lucide-react";
+import { Smile, Heart, Sun, CircleDot, Battery, Frown, Cloud, CloudRain, Zap, Skull, CalendarIcon } from "lucide-react";
 import MoodAlert from "./MoodAlert";
 
 const moodOptions = [
@@ -308,7 +308,7 @@ const MoodTracker = () => {
         <CardFooter className="justify-center">
           <Alert className="bg-mindshift-light border-mindshift-lavender">
             <AlertDescription className="flex items-center">
-              <Calendar className="h-4 w-4 mr-2 text-mindshift-raspberry" />
+              <CalendarIcon className="h-4 w-4 mr-2 text-mindshift-raspberry" />
               {todayEntry ? 
                 "You've tracked your mood today. Come back tomorrow for another entry!" : 
                 "Tracking your mood regularly helps you understand patterns and triggers in your emotional well-being."
