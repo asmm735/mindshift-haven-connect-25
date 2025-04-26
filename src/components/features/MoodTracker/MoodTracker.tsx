@@ -12,16 +12,16 @@ import { Smile, Heart, Sun, CircleDot, Battery, Frown, Cloud, CloudRain, Zap, Sk
 import MoodAlert from "./MoodAlert";
 
 const moodOptions = [
-  { label: "Excited", value: 1, color: "#22c55e", icon: <Heart className="w-6 h-6" /> },
-  { label: "Happy", value: 2, color: "#4ade80", icon: <Smile className="w-6 h-6" /> },
-  { label: "Calm", value: 3, color: "#60a5fa", icon: <Sun className="w-6 h-6" /> },
-  { label: "Normal", value: 4, color: "#93c5fd", icon: <CircleDot className="w-6 h-6" /> },
-  { label: "Exhausted", value: 5, color: "#fbbf24", icon: <Battery className="w-6 h-6" /> },
-  { label: "Frustrated", value: 6, color: "#fb923c", icon: <Frown className="w-6 h-6" /> },
-  { label: "Sad", value: 7, color: "#f87171", icon: <Cloud className="w-6 h-6" /> },
-  { label: "Anxious", value: 8, color: "#ef4444", icon: <CloudRain className="w-6 h-6" /> },
-  { label: "Stressed", value: 9, color: "#dc2626", icon: <Zap className="w-6 h-6" /> },
-  { label: "Depressed", value: 10, color: "#991b1b", icon: <Skull className="w-6 h-6" /> },
+  { label: "Excited", value: 10, color: "#22c55e", icon: <Heart className="w-6 h-6" /> },
+  { label: "Happy", value: 9, color: "#4ade80", icon: <Smile className="w-6 h-6" /> },
+  { label: "Calm", value: 8, color: "#60a5fa", icon: <Sun className="w-6 h-6" /> },
+  { label: "Normal", value: 7, color: "#93c5fd", icon: <CircleDot className="w-6 h-6" /> },
+  { label: "Exhausted", value: 6, color: "#fbbf24", icon: <Battery className="w-6 h-6" /> },
+  { label: "Frustrated", value: 5, color: "#fb923c", icon: <Frown className="w-6 h-6" /> },
+  { label: "Sad", value: 4, color: "#f87171", icon: <Cloud className="w-6 h-6" /> },
+  { label: "Anxious", value: 3, color: "#ef4444", icon: <CloudRain className="w-6 h-6" /> },
+  { label: "Stressed", value: 2, color: "#dc2626", icon: <Zap className="w-6 h-6" /> },
+  { label: "Depressed", value: 1, color: "#991b1b", icon: <Skull className="w-6 h-6" /> },
 ];
 
 type MoodEntryChartData = {
@@ -195,7 +195,7 @@ const MoodTracker = () => {
 
   const chartData: MoodEntryChartData[] = moodHistory.map(item => ({
     name: format(new Date(item.entry_date), "MMM dd"),
-    mood: 11 - item.mood,
+    mood: item.mood,
     notes: item.notes,
     moodLabel: moodOptions.find(option => option.value === item.mood)?.label ?? "",
   }));
@@ -288,8 +288,7 @@ const MoodTracker = () => {
                   ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} 
                   stroke="#666"
                   tickFormatter={(value) => {
-                    const reversedValue = 11 - value;
-                    const mood = moodOptions.find(m => m.value === reversedValue);
+                    const mood = moodOptions.find(m => m.value === value);
                     return mood ? mood.label : "";
                   }}
                 />
