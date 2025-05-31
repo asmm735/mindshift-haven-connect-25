@@ -41,16 +41,17 @@ export const MoodChart = ({ moodHistory }: MoodChartProps) => {
   return (
     <div className="h-80">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
+        <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="name" stroke="#666" />
           <YAxis 
             domain={[1, 10]} 
             ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} 
             stroke="#666"
+            width={60}
             tickFormatter={(value) => {
               const mood = moodOptions.find(m => m.value === value);
-              return mood ? mood.label : "";
+              return mood ? mood.label : value.toString();
             }}
           />
           <Tooltip content={<CustomTooltip />} />
@@ -61,6 +62,7 @@ export const MoodChart = ({ moodHistory }: MoodChartProps) => {
             strokeWidth={3}
             dot={{ stroke: "#943c64", strokeWidth: 2, r: 6, fill: "white" }}
             activeDot={{ stroke: "#943c64", strokeWidth: 2, r: 8, fill: "#943c64" }}
+            connectNulls={false}
           />
         </LineChart>
       </ResponsiveContainer>

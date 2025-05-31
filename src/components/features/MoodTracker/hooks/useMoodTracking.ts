@@ -39,16 +39,27 @@ export function useMoodTracking() {
       }));
       setMoodHistory(typedData);
       
-      // Check for declining trend
+      // Enhanced declining trend detection
       if (typedData.length >= 5) {
         const lastFive = typedData.slice(-5);
-        let declineCount = 0;
+        let consecutiveDeclines = 0;
+        let hasSignificantDecline = false;
+        
+        // Check for consecutive declining days (5+ days)
         for (let i = 1; i < lastFive.length; i++) {
           if (lastFive[i].mood < lastFive[i-1].mood) {
-            declineCount++;
+            consecutiveDeclines++;
+          } else {
+            consecutiveDeclines = 0; // Reset if not consecutive
           }
         }
-        setHasDeclineAlert(declineCount >= 4);
+        
+        // Also check if the overall trend is significantly downward
+        const firstMood = lastFive[0].mood;
+        const lastMood = lastFive[lastFive.length - 1].mood;
+        hasSignificantDecline = (firstMood - lastMood) >= 3; // 3+ point drop
+        
+        setHasDeclineAlert(consecutiveDeclines >= 4 || hasSignificantDecline);
       }
     }
     setLoading(false);
@@ -126,6 +137,8 @@ export function useMoodTracking() {
       } else {
         toast({ title: "Mood updated!" });
         fetchMoodHistory(userId);
+        setSelectedMood("");
+        setNotes("");
       }
     } else {
       const { error } = await supabase.from('mood_entries').insert({
@@ -141,6 +154,8 @@ export function useMoodTracking() {
       } else {
         toast({ title: "Mood logged successfully", description: "Your mood has been recorded for today." });
         fetchMoodHistory(userId);
+        setSelectedMood("");
+        setNotes("");
       }
     }
   };

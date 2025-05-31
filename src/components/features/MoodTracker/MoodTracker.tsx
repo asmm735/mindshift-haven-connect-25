@@ -1,7 +1,9 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CalendarIcon, TrendingDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { CalendarIcon, TrendingDown, MessageCircle, Phone } from "lucide-react";
 import MoodAlert from "./MoodAlert";
 import { MoodChart } from "./MoodChart";
 import { MoodSelector } from "./MoodSelector";
@@ -67,10 +69,26 @@ const MoodTracker = () => {
           )}
           
           {hasDeclineAlert && moodHistory.length >= 5 && (
-            <Alert className="mt-4 bg-orange-50 border-orange-200">
-              <TrendingDown className="h-4 w-4 text-orange-600" />
-              <AlertDescription className="text-orange-800">
-                We noticed your mood has been declining over the past few days. Consider reaching out for support or trying some self-care activities.
+            <Alert className="mt-4 bg-red-50 border-red-200">
+              <TrendingDown className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                <div className="space-y-3">
+                  <p>We noticed your mood has been declining significantly. Your mental health matters, and you don't have to face this alone.</p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button asChild size="sm" className="bg-mindshift-raspberry hover:bg-mindshift-raspberry/90">
+                      <Link to="/ai-chat" className="flex items-center gap-2">
+                        <MessageCircle className="h-4 w-4" />
+                        Chat with our AI Assistant
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm" className="border-red-300 text-red-700 hover:bg-red-50">
+                      <a href="tel:988" className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        Crisis Hotline: 988
+                      </a>
+                    </Button>
+                  </div>
+                </div>
               </AlertDescription>
             </Alert>
           )}
