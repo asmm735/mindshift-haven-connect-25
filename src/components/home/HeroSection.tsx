@@ -8,7 +8,7 @@ const HeroSection = () => {
       {/* Background with gradient overlay */}
       <div className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
-          backgroundImage: 'url("https://images.unsplash.com/photo-1518495973542-4542c06a5843?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80")',
+          backgroundImage: 'url("/lovable-uploads/37fe14e0-1b4e-4f77-9374-3d7961f886fd.png")',
           backgroundPosition: 'center',
           opacity: 0.8
         }}>
