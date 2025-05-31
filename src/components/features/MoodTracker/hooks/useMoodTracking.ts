@@ -17,6 +17,7 @@ export function useMoodTracking() {
     days_without_entry: number;
     negative_mood_count: number;
   } | null>(null);
+  const [hasDeclineAlert, setHasDeclineAlert] = useState(false);
   const { toast } = useToast();
 
   const todayISO = format(new Date(), "yyyy-MM-dd");
@@ -27,8 +28,7 @@ export function useMoodTracking() {
       .from("mood_entries")
       .select("*")
       .eq("user_id", userId)
-      .order("entry_date", { ascending: true })
-      .limit(14);
+      .order("entry_date", { ascending: true });
 
     if (error) {
       toast({ title: "Failed to load mood history", variant: "destructive" });
@@ -38,6 +38,18 @@ export function useMoodTracking() {
         mood: entry.mood as MoodValue
       }));
       setMoodHistory(typedData);
+      
+      // Check for declining trend
+      if (typedData.length >= 5) {
+        const lastFive = typedData.slice(-5);
+        let declineCount = 0;
+        for (let i = 1; i < lastFive.length; i++) {
+          if (lastFive[i].mood < lastFive[i-1].mood) {
+            declineCount++;
+          }
+        }
+        setHasDeclineAlert(declineCount >= 4);
+      }
     }
     setLoading(false);
   };
@@ -143,6 +155,7 @@ export function useMoodTracking() {
     loading,
     userId,
     moodPatterns,
+    hasDeclineAlert,
     todayISO,
     handleSubmit
   };

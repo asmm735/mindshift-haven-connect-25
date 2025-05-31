@@ -10,10 +10,10 @@ const HeroSection = () => {
         style={{ 
           backgroundImage: 'url("/lovable-uploads/37fe14e0-1b4e-4f77-9374-3d7961f886fd.png")',
           backgroundPosition: 'center',
-          opacity: 0.8
+          opacity: 0.6
         }}>
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-mindshift-lavender/40 to-white"></div>
+      <div className="absolute inset-0 bg-black/30"></div>
       
       {/* Content */}
       <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">

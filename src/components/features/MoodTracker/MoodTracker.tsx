@@ -1,7 +1,7 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, TrendingDown } from "lucide-react";
 import MoodAlert from "./MoodAlert";
 import { MoodChart } from "./MoodChart";
 import { MoodSelector } from "./MoodSelector";
@@ -18,6 +18,7 @@ const MoodTracker = () => {
     loading,
     userId,
     moodPatterns,
+    hasDeclineAlert,
     todayISO,
     handleSubmit
   } = useMoodTracking();
@@ -50,7 +51,7 @@ const MoodTracker = () => {
       <Card className="mindshift-card">
         <CardHeader>
           <CardTitle className="text-2xl text-mindshift-raspberry">Your Mood History</CardTitle>
-          <CardDescription>View your mood trends over the past weeks</CardDescription>
+          <CardDescription>View your mood trends over time</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -63,6 +64,15 @@ const MoodTracker = () => {
             <div className="text-center text-gray-500 my-14">No mood entries yet.</div>
           ) : (
             <MoodChart moodHistory={moodHistory} />
+          )}
+          
+          {hasDeclineAlert && moodHistory.length >= 5 && (
+            <Alert className="mt-4 bg-orange-50 border-orange-200">
+              <TrendingDown className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-800">
+                We noticed your mood has been declining over the past few days. Consider reaching out for support or trying some self-care activities.
+              </AlertDescription>
+            </Alert>
           )}
         </CardContent>
         <CardFooter className="justify-center">

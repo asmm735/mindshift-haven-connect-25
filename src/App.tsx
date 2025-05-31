@@ -12,6 +12,7 @@ import MoodTracker from "./pages/MoodTracker";
 import AIChat from "./pages/AIChat";
 import Pomodoro from "./pages/Pomodoro";
 import TheraConnect from "./pages/TheraConnect";
+import Reviews from "./pages/Reviews";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -38,6 +39,7 @@ const App = () => (
           } />
           <Route path="/pomodoro" element={<Pomodoro />} />
           <Route path="/therapists" element={<TheraConnect />} />
+          <Route path="/reviews" element={<Reviews />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="*" element={<NotFound />} />
