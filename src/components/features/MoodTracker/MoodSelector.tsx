@@ -23,6 +23,11 @@ export const MoodSelector = ({
   onSubmit,
   todayEntry
 }: MoodSelectorProps) => {
+  const handleMoodClick = (moodValue: number) => {
+    console.log("Mood clicked:", moodValue);
+    onMoodSelect(moodValue.toString());
+  };
+
   return (
     <Card className="mindshift-card">
       <CardHeader>
@@ -35,15 +40,19 @@ export const MoodSelector = ({
           <div className="grid grid-cols-5 gap-2">
             {moodOptions.map(option => {
               const Icon = option.icon;
+              const isSelected = selectedMood === option.value.toString();
+              console.log("Rendering option:", option.label, "value:", option.value, "selected:", isSelected);
+              
               return (
                 <button
                   key={option.value}
+                  type="button"
                   className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${
-                    selectedMood === option.value.toString()
+                    isSelected
                       ? "border-mindshift-raspberry bg-mindshift-raspberry/10"
                       : "border-gray-200 hover:border-mindshift-lavender"
                   }`}
-                  onClick={() => onMoodSelect(option.value.toString())}
+                  onClick={() => handleMoodClick(option.value)}
                 >
                   <div 
                     className="w-8 h-8 rounded-full mb-1 flex items-center justify-center" 
@@ -70,7 +79,7 @@ export const MoodSelector = ({
       <CardFooter>
         <Button
           onClick={onSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !selectedMood}
           className="w-full mindshift-button"
         >
           {isSubmitting ? "Saving..." : (todayEntry ? "Update Mood" : "Log your mood")}

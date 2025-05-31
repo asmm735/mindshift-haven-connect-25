@@ -31,6 +31,7 @@ export function useMoodTracking() {
       .order("entry_date", { ascending: true });
 
     if (error) {
+      console.error("Error fetching mood history:", error);
       toast({ title: "Failed to load mood history", variant: "destructive" });
     } else if (data) {
       const typedData = data.map(entry => ({
@@ -50,14 +51,14 @@ export function useMoodTracking() {
           if (lastFive[i].mood < lastFive[i-1].mood) {
             consecutiveDeclines++;
           } else {
-            consecutiveDeclines = 0; // Reset if not consecutive
+            consecutiveDeclines = 0;
           }
         }
         
         // Also check if the overall trend is significantly downward
         const firstMood = lastFive[0].mood;
         const lastMood = lastFive[lastFive.length - 1].mood;
-        hasSignificantDecline = (firstMood - lastMood) >= 3; // 3+ point drop
+        hasSignificantDecline = (firstMood - lastMood) >= 3;
         
         setHasDeclineAlert(consecutiveDeclines >= 4 || hasSignificantDecline);
       }
@@ -111,6 +112,8 @@ export function useMoodTracking() {
   }, [userId, moodHistory]);
 
   const handleSubmit = async () => {
+    console.log("Submitting mood:", selectedMood);
+    
     if (!selectedMood) {
       toast({ title: "Please select a mood", variant: "destructive" });
       return;
@@ -119,45 +122,66 @@ export function useMoodTracking() {
       toast({ title: "You must be signed in to log your mood", variant: "destructive" });
       return;
     }
+    
     setIsSubmitting(true);
     
-    const moodValue = parseInt(selectedMood) as MoodValue;
+    // Parse the mood value as integer
+    const moodValue = parseInt(selectedMood, 10);
+    console.log("Parsed mood value:", moodValue);
+    
+    // Validate mood value
+    if (isNaN(moodValue) || moodValue < 1 || moodValue > 10) {
+      console.error("Invalid mood value:", moodValue);
+      toast({ title: "Invalid mood value", variant: "destructive" });
+      setIsSubmitting(false);
+      return;
+    }
+    
     const todayEntry = moodHistory.find(entry => entry.entry_date === todayISO);
 
-    if (todayEntry) {
-      const { error } = await supabase
-        .from('mood_entries')
-        .update({ mood: moodValue, notes })
-        .eq('user_id', userId)
-        .eq('entry_date', todayISO);
-      setIsSubmitting(false);
+    try {
+      if (todayEntry) {
+        console.log("Updating existing entry for today");
+        const { error } = await supabase
+          .from('mood_entries')
+          .update({ mood: moodValue, notes })
+          .eq('user_id', userId)
+          .eq('entry_date', todayISO);
 
-      if (error) {
-        toast({ title: "Update failed", description: error.message, variant: "destructive" });
+        if (error) {
+          console.error("Update error:", error);
+          toast({ title: "Update failed", description: error.message, variant: "destructive" });
+        } else {
+          toast({ title: "Mood updated!" });
+          fetchMoodHistory(userId);
+          setSelectedMood("");
+          setNotes("");
+        }
       } else {
-        toast({ title: "Mood updated!" });
-        fetchMoodHistory(userId);
-        setSelectedMood("");
-        setNotes("");
-      }
-    } else {
-      const { error } = await supabase.from('mood_entries').insert({
-        mood: moodValue,
-        notes,
-        entry_date: todayISO,
-        user_id: userId
-      });
-      setIsSubmitting(false);
+        console.log("Creating new entry for today");
+        const { error } = await supabase.from('mood_entries').insert({
+          mood: moodValue,
+          notes,
+          entry_date: todayISO,
+          user_id: userId
+        });
 
-      if (error) {
-        toast({ title: "Submission failed", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Mood logged successfully", description: "Your mood has been recorded for today." });
-        fetchMoodHistory(userId);
-        setSelectedMood("");
-        setNotes("");
+        if (error) {
+          console.error("Insert error:", error);
+          toast({ title: "Submission failed", description: error.message, variant: "destructive" });
+        } else {
+          toast({ title: "Mood logged successfully", description: "Your mood has been recorded for today." });
+          fetchMoodHistory(userId);
+          setSelectedMood("");
+          setNotes("");
+        }
       }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast({ title: "Unexpected error occurred", variant: "destructive" });
     }
+    
+    setIsSubmitting(false);
   };
 
   return {
