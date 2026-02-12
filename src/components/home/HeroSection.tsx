@@ -45,7 +45,7 @@ const HeroSection = () => {
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 text-center drop-shadow-lg">The Story of MindShift</h2>
           <p className="text-white text-lg leading-relaxed text-center drop-shadow-md">
-            We are two students — Jalaja Yelve and Asmita Pal from Vidyalankar Institute of Technology, brought together by a shared vision: to create a safe, welcoming space where people can truly acknowledge and nurture their mental well-being.
+            We are three students — Bushra Khan, Asmita Pal, and Jalaja Yelve from Vidyalankar Institute of Technology, brought together by a shared vision: to create a safe, welcoming space where people can truly acknowledge and nurture their mental well-being.
             <br /><br />
             In a world where 3 out of 5 people silently struggle with mental health, the pressure to "just keep going" is overwhelming, especially for students. The expectations, deadlines, comparison, and constant push to perform — all while trying to figure out life — can feel like too much. Yet, no one really teaches us how to cope, to pause, or even to breathe.
             <br /><br />
