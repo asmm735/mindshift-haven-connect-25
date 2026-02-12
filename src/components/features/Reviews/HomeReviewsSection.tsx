@@ -18,7 +18,7 @@ const HomeReviewsSection = () => {
   const [reviews, setReviews] = useState<ReviewData[]>([]);
 
   const fetchReviews = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("reviews")
       .select("*")
       .order("created_at", { ascending: false })

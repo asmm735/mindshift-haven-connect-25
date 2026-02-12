@@ -56,7 +56,7 @@ const AIChat = () => {
       try {
         const { data: session } = await supabase.auth.getSession();
         if (session?.session?.user) {
-          const { data, error } = await supabase
+          const { data, error } = await (supabase as any)
             .from('chat_messages')
             .select('*')
             .eq('user_id', session.session.user.id)
@@ -93,7 +93,7 @@ const AIChat = () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) return;
       
-      await supabase.from('chat_messages').insert({
+      await (supabase as any).from('chat_messages').insert({
         user_id: session.session.user.id,
         type: message.type,
         content: message.text,

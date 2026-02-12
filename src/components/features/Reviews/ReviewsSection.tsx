@@ -26,7 +26,7 @@ const ReviewsSection = () => {
   const { toast } = useToast();
 
   const fetchReviews = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("reviews")
       .select("*")
       .order("created_at", { ascending: false });
@@ -70,7 +70,7 @@ const ReviewsSection = () => {
     }
     
     setIsSubmitting(true);
-    const { error } = await supabase.from("reviews").insert({
+    const { error } = await (supabase as any).from("reviews").insert({
       content,
       rating,
       user_id: userId
