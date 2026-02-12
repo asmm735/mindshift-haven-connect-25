@@ -24,7 +24,7 @@ export function useMoodTracking() {
 
   const fetchMoodHistory = async (userId: string) => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("mood_entries")
       .select("*")
       .eq("user_id", userId)
@@ -67,7 +67,7 @@ export function useMoodTracking() {
   };
 
   const checkMoodPatterns = async (userId: string) => {
-    const { data, error } = await supabase.rpc('check_mood_patterns', {
+    const { data, error } = await (supabase as any).rpc('check_mood_patterns', {
       user_id_param: userId
     });
 
@@ -142,7 +142,7 @@ export function useMoodTracking() {
     try {
       if (todayEntry) {
         console.log("Updating existing entry for today");
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('mood_entries')
           .update({ mood: moodValue, notes })
           .eq('user_id', userId)
@@ -159,7 +159,7 @@ export function useMoodTracking() {
         }
       } else {
         console.log("Creating new entry for today");
-        const { error } = await supabase.from('mood_entries').insert({
+        const { error } = await (supabase as any).from('mood_entries').insert({
           mood: moodValue,
           notes,
           entry_date: todayISO,

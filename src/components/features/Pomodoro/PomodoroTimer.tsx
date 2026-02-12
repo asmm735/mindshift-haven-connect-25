@@ -52,7 +52,7 @@ const PomodoroTimer = () => {
   } = useQuery({
     queryKey: ['soundTracks'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('sound_therapy_tracks')
         .select('*');
       

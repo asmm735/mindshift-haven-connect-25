@@ -25,7 +25,7 @@ const TheraConnect = () => {
 
   const fetchTherapists = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("therapists")
       .select("*")
       .in("city", ["Mumbai", "Navi Mumbai"])

@@ -13,7 +13,7 @@ const TheraConnect = () => {
   const { data: therapistsData, isLoading, error } = useQuery({
     queryKey: ['therapists'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('therapists')
         .select('*')
         .order('name');
